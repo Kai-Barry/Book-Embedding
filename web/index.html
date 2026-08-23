@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/styles.css?v=3">
+  <link rel="stylesheet" href="/static/styles.css?v=4">
 </head>
 <body>
   <div class="container">
@@ -37,17 +37,20 @@
         </div>
 
         <div class="input-box-wrapper" style="margin-top: 1rem;">
-          <input 
-            type="text" 
-            id="book-input" 
-            class="search-input" 
-            placeholder="Search any title or author (e.g. Iain Reid, Dune, Three-Body Problem, Frankenstein, Dracula)..."
-            autocomplete="off"
-            oninput="handleCatalogAutocomplete(this.value)"
-            onkeydown="handleAutocompleteKeydown(event)"
-            onkeypress="if(event.key === 'Enter') handleBookSelection()"
-          />
-          <div id="autocomplete-list" class="autocomplete-results"></div>
+          <div class="search-field-wrapper" style="position: relative; flex: 1;">
+            <input 
+              type="text" 
+              id="book-input" 
+              class="search-input" 
+              style="width: 100%;"
+              placeholder="Search any title or author (e.g. Iain Reid, Dune, Three-Body Problem, Frankenstein, Dracula)..."
+              autocomplete="off"
+              oninput="handleCatalogAutocomplete(this.value)"
+              onkeydown="handleAutocompleteKeydown(event)"
+              onkeypress="if(event.key === 'Enter') handleBookSelection()"
+            />
+            <div id="autocomplete-list" class="autocomplete-results"></div>
+          </div>
           <button class="action-btn" id="btn-search-book" onclick="handleBookSelection()">
             <span>Select Book</span>
             <span>➔</span>
@@ -180,6 +183,6 @@
     </div>
   </div>
 
-  <script src="/static/app.js?v=3"></script>
+  <script src="/static/app.js?v=4"></script>
 </body>
 </html>

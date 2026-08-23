@@ -30,6 +30,15 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeBookModal();
 });
 
+// Dismiss autocomplete dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  const list = document.getElementById('autocomplete-list');
+  const input = document.getElementById('book-input');
+  if (list && input && !list.contains(e.target) && e.target !== input) {
+    list.style.display = 'none';
+  }
+});
+
 function toggleFocusConstellation() {
   focusConstellationOnly = !focusConstellationOnly;
   const btn = document.getElementById('btn-focus-constellation');
