@@ -19,6 +19,8 @@ chromadb
 faiss-cpu
 numpy
 pandas
+pyarrow
+fastparquet
 scikit-learn
 tqdm
 
