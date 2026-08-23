@@ -114,7 +114,7 @@ header {
   padding: 2.2rem;
   box-shadow: var(--shadow-lg);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   transition: all 0.3s ease;
 }
 
@@ -183,6 +183,54 @@ header {
   outline: none;
   border-color: var(--accent-cyan);
   box-shadow: 0 0 20px rgba(6, 182, 212, 0.25);
+}
+
+/* Autocomplete Dropdown Menu */
+.autocomplete-results {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: rgba(15, 23, 42, 0.98);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--accent-cyan);
+  border-radius: var(--radius-md);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(6, 182, 212, 0.2);
+  max-height: 380px;
+  overflow-y: auto;
+  z-index: 9999;
+  display: none;
+}
+
+.autocomplete-item {
+  padding: 0.9rem 1.2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.autocomplete-item:last-child {
+  border-bottom: none;
+}
+
+.autocomplete-item:hover, .autocomplete-item.active {
+  background: rgba(99, 102, 241, 0.25);
+  border-left: 3px solid var(--accent-cyan);
+}
+
+.autocomplete-title {
+  font-weight: 700;
+  color: #ffffff;
+  font-size: 1rem;
+}
+
+.autocomplete-author {
+  font-size: 0.82rem;
+  color: var(--accent-cyan);
+  margin-top: 0.15rem;
 }
 
 .action-btn {
