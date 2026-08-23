@@ -1,0 +1,31 @@
+# PyTorch with CUDA support
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch
+torchvision
+torchaudio
+
+# Transformers & Embeddings
+sentence-transformers
+transformers
+accelerate
+huggingface_hub
+
+# Cloud Embeddings (Optional Gemini support)
+google-genai
+google-generativeai
+
+# Vector DB & Scientific Computing
+chromadb
+faiss-cpu
+numpy
+pandas
+scikit-learn
+tqdm
+
+# API & Web Server
+fastapi
+uvicorn
+pydantic
+python-dotenv
+aiofiles
+httpx

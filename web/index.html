@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book-Embedding AI | Semantic Similarity & Vector Discovery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo-group">
+        <div class="logo-icon">📖⚡</div>
+        <div>
+          <h1 class="brand-title">Book Embedding Engine</h1>
+          <p style="font-size: 0.85rem; color: var(--text-secondary);">GPU Semantic Search & High-Dimensional Book Discovery</p>
+        </div>
+      </div>
+      <div id="gpu-badge" class="badge-gpu">
+        <span class="status-dot"></span>
+        <span id="gpu-info">Detecting Hardware...</span>
+      </div>
+    </header>
+
+    <main>
+      <!-- Search Hub -->
+      <section class="search-hero">
+        <div class="tab-nav">
+          <button id="tab-semantic" class="tab-btn active" onclick="switchTab('semantic')">✨ Natural Language Discovery</button>
+          <button id="tab-book" class="tab-btn" onclick="switchTab('book')">🔍 Find Similar by Book Title</button>
+          <button id="tab-galaxy" class="tab-btn" onclick="switchTab('galaxy')">🌌 2D Vector Space Galaxy</button>
+        </div>
+
+        <!-- Semantic Query Form -->
+        <div id="panel-semantic">
+          <div class="input-box-wrapper">
+            <input 
+              type="text" 
+              id="semantic-input" 
+              class="search-input" 
+              placeholder="e.g., 'cyberpunk detective solving murders in futuristic neo-tokyo' or 'epic space opera with desert planets'"
+              onkeypress="if(event.key === 'Enter') handleSemanticSearch()"
+            />
+            <button class="action-btn" id="btn-search-semantic" onclick="handleSemanticSearch()">
+              <span>Explore</span>
+              <span>➔</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Book-to-Book Form -->
+        <div id="panel-book" style="display: none;">
+          <div class="input-box-wrapper">
+            <input 
+              type="text" 
+              id="book-input" 
+              class="search-input" 
+              placeholder="Search any title or author (e.g. Iain Reid, Three-Body Problem, Dune, Frankenstein)..."
+              autocomplete="off"
+              oninput="handleCatalogAutocomplete(this.value)"
+              onkeydown="handleAutocompleteKeydown(event)"
+              onkeypress="if(event.key === 'Enter') handleBookSimilarSearch()"
+            />
+            <div id="autocomplete-list" class="autocomplete-results"></div>
+            <button class="action-btn" id="btn-search-book" onclick="handleBookSimilarSearch()">
+              <span>Find Similar</span>
+              <span>➔</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2D Galaxy Visualizer Form -->
+        <div id="panel-galaxy" style="display: none;">
+          <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.95rem;">
+            Explore the 1024-dimensional semantic embedding space projected to 2D using UMAP. Hover over stars to inspect book metadata, or click on any book to calculate its nearest vector neighbors.
+          </p>
+          <div style="display: flex; gap: 1rem; align-items: center;">
+            <button class="action-btn" onclick="resetGalaxyView()"><span>🔭 Reset View</span></button>
+            <span id="galaxy-legend" style="font-size: 0.85rem; color: var(--text-muted);">Points: Loading galaxy data...</span>
+          </div>
+        </div>
+
+        <!-- Filters & Legend -->
+        <div class="filter-bar">
+          <div class="filter-item">
+            <label for="genre-select">Genre:</label>
+            <select id="genre-select" class="select-box" onchange="handleFilterChange()">
+              <option value="">All Genres</option>
+            </select>
+          </div>
+          <div class="filter-item">
+            <label for="pov-select">POV / Voice:</label>
+            <select id="pov-select" class="select-box" onchange="handleFilterChange()">
+              <option value="">Any POV</option>
+              <option value="First Person">First Person ("I")</option>
+              <option value="Third Person">Third Person</option>
+              <option value="Epistolary">Epistolary / Multi</option>
+            </select>
+          </div>
+          <div class="filter-item">
+            <label for="pacing-select">Pacing:</label>
+            <select id="pacing-select" class="select-box" onchange="handleFilterChange()">
+              <option value="">Any Pacing</option>
+              <option value="Slow-Burn">Slow-Burn / Atmospheric</option>
+              <option value="Fast-Paced">Fast-Paced / Propulsive</option>
+            </select>
+          </div>
+          <div class="filter-item">
+            <label for="topk-select">Matches:</label>
+            <select id="topk-select" class="select-box">
+              <option value="6">6 Books</option>
+              <option value="12" selected>12 Books</option>
+              <option value="24">24 Books</option>
+            </select>
+          </div>
+          <div id="index-stats" style="margin-left: auto; font-size: 0.85rem; color: var(--text-muted);">
+            Index: Loading...
+          </div>
+        </div>
+
+        <!-- Visual Genre Legend Pills -->
+        <div class="genre-legend-bar">
+          <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Galaxy Key:</span>
+          <span class="legend-pill" style="--pill-color: #06b6d4;" onclick="filterByLegend('Science Fiction')">🔵 Sci-Fi / Space</span>
+          <span class="legend-pill" style="--pill-color: #ef4444;" onclick="filterByLegend('Horror')">🔴 Horror / Gothic</span>
+          <span class="legend-pill" style="--pill-color: #a855f7;" onclick="filterByLegend('Fantasy')">🟣 Fantasy / Magic</span>
+          <span class="legend-pill" style="--pill-color: #f59e0b;" onclick="filterByLegend('Mystery')">🟡 Mystery / Crime</span>
+          <span class="legend-pill" style="--pill-color: #10b981;" onclick="filterByLegend('History')">🟢 History / Non-Fiction</span>
+          <span class="legend-pill" style="--pill-color: #ec4899;" onclick="filterByLegend('Romance')">🌸 Romance</span>
+          <span class="legend-pill" style="--pill-color: #6366f1;" onclick="filterByLegend('')">⚪ All / Literary</span>
+        </div>
+      </section>
+
+      <!-- 2D Interactive Canvas Galaxy Container (Always Available / Constellation View) -->
+      <section id="galaxy-section" style="margin-bottom: 2.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff;">🌌 2D Vector Space Constellation</h3>
+            <span id="galaxy-status-tag" style="font-size: 0.75rem; background: rgba(99, 102, 241, 0.2); color: #a5b4fc; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(99, 102, 241, 0.3);">Real-time Constellation</span>
+          </div>
+          <div style="display: flex; gap: 0.6rem; align-items: center;">
+            <button id="btn-focus-constellation" class="action-btn" style="padding: 0.4rem 0.9rem; font-size: 0.85rem; background: rgba(6, 182, 212, 0.2); border-color: rgba(6, 182, 212, 0.5); color: #67e8f9;" onclick="toggleFocusConstellation()">
+              ✨ Focus Constellation Only
+            </button>
+            <div style="display: flex; gap: 2px;">
+              <button class="action-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem;" title="Zoom In (Up to 50x)" onclick="zoomGalaxy(1.35)">➕</button>
+              <button class="action-btn" style="padding: 0.4rem 0.6rem; font-size: 0.85rem;" title="Zoom Out" onclick="zoomGalaxy(0.75)">➖</button>
+              <button class="action-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="resetGalaxyView()">🔭 Center</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="galaxy-view" style="position: relative; width: 100%; height: 480px; background: rgba(11, 15, 25, 0.95); border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-lg);">
+          <canvas id="galaxy-canvas" width="1200" height="480" style="width: 100%; height: 100%; cursor: grab;"></canvas>
+          <div id="galaxy-tooltip" style="display: none; position: absolute; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border: 1px solid var(--accent-cyan); border-radius: var(--radius-md); padding: 0.8rem 1rem; color: #fff; pointer-events: none; max-width: 320px; z-index: 50; box-shadow: var(--shadow-lg); font-size: 0.85rem;"></div>
+          <div id="zoom-indicator" style="position: absolute; bottom: 12px; right: 15px; font-size: 0.75rem; color: #94a3b8; background: rgba(15, 23, 42, 0.7); padding: 3px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.08); pointer-events: none;">Zoom: 1.0x</div>
+        </div>
+      </section>
+
+      <!-- Results Area -->
+      <section class="results-section">
+        <div class="results-header" id="results-header" style="display: none;">
+          <div class="results-count" id="results-count">Results</div>
+          <div class="latency-tag" id="latency-tag">0.0 ms</div>
+        </div>
+
+        <div id="loading" class="loading-state" style="display: none;">
+          <div class="spinner"></div>
+          <p id="loading-msg">Computing dense vector similarities on RTX 4080 GPU...</p>
+        </div>
+
+        <!-- Target Book Spotlight Hero Card & Interactive Weight Tuning Panel -->
+        <div id="target-book-spotlight" class="target-spotlight-card" style="display: none;"></div>
+
+        <div id="books-grid" class="books-grid"></div>
+
+        <div id="empty-state" class="empty-state">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">🪐</div>
+          <h3>Ready for Semantic Exploration</h3>
+          <p>Search for book themes, plots, or pick a book to calculate mathematical cosine nearest neighbors.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Book Detail Modal Popup -->
+  <div id="book-modal-overlay" class="modal-overlay" style="display: none;" onclick="if(event.target === this) closeBookModal()">
+    <div class="modal-card">
+      <button class="modal-close-btn" onclick="closeBookModal()">✕</button>
+      <div id="modal-content">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
