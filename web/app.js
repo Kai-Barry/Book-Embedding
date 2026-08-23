@@ -54,9 +54,7 @@ function updateZoomIndicator() {
 }
 
 function handleFilterChange() {
-  if (currentTab === 'semantic') {
-    handleSemanticSearch();
-  } else if (currentTab === 'book' && currentTargetId) {
+  if (currentTargetId) {
     handleBookSimilarSearch(currentTargetId);
   } else {
     requestGalaxyDraw();
@@ -276,22 +274,6 @@ async function fetchGenres() {
   }
 }
 
-function switchTab(tab) {
-  currentTab = tab;
-  document.getElementById('tab-semantic').classList.toggle('active', tab === 'semantic');
-  document.getElementById('tab-book').classList.toggle('active', tab === 'book');
-  document.getElementById('tab-galaxy').classList.toggle('active', tab === 'galaxy');
-
-  document.getElementById('panel-semantic').style.display = tab === 'semantic' ? 'block' : 'none';
-  document.getElementById('panel-book').style.display = tab === 'book' ? 'block' : 'none';
-  document.getElementById('panel-galaxy').style.display = tab === 'galaxy' ? 'block' : 'none';
-
-  if (tab === 'galaxy') {
-    resetGalaxyView();
-    document.getElementById('galaxy-section').scrollIntoView({ behavior: 'smooth' });
-  }
-}
-
 function showLoading(msg = 'Computing dense vector similarities on GPU...') {
   document.getElementById('loading').style.display = 'block';
   document.getElementById('loading-msg').textContent = msg;
@@ -302,42 +284,6 @@ function showLoading(msg = 'Computing dense vector similarities on GPU...') {
 
 function hideLoading() {
   document.getElementById('loading').style.display = 'none';
-}
-
-async function handleSemanticSearch() {
-  const query = document.getElementById('semantic-input').value.trim();
-  if (!query) return;
-
-  const topK = parseInt(document.getElementById('topk-select').value);
-  const genre = document.getElementById('genre-select').value;
-
-  showLoading('Generating query embedding & calculating cosine nearest neighbors...');
-
-  try {
-    const res = await fetch('/api/semantic-search', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: query,
-        top_k: topK,
-        genre_filter: genre || null
-      })
-    });
-
-    const data = await res.json();
-    hideLoading();
-    renderResults(data.results, `Semantic matches for "${query}"`, data.latency_ms);
-    
-    // Sync with Galaxy Constellation View
-    activeSearchResultPoints = data.results || [];
-    targetBookPoint = null;
-    if (activeSearchResultPoints.length > 0) {
-      focusGalaxyOnPoints(activeSearchResultPoints);
-    }
-  } catch (err) {
-    hideLoading();
-    alert('Error performing semantic search: ' + err.message);
-  }
 }
 
 async function handleBookSimilarSearch(bookIdOrTitle, isReRank = false) {
@@ -365,6 +311,14 @@ async function handleBookSimilarSearch(bookIdOrTitle, isReRank = false) {
 
     const data = await res.json();
     hideLoading();
+
+    // Reveal Step 2 and Step 3
+    const step2 = document.getElementById('step-2-section');
+    const step3 = document.getElementById('step-3-section');
+    const emptyState = document.getElementById('empty-state');
+    if (step2) step2.style.display = 'block';
+    if (step3) step3.style.display = 'block';
+    if (emptyState) emptyState.style.display = 'none';
 
     // Update concept keywords state if new book
     if (!isReRank && data.concept_keywords) {
@@ -399,7 +353,7 @@ async function handleBookSimilarSearch(bookIdOrTitle, isReRank = false) {
     if (!isReRank) {
       focusGalaxyOnTarget(targetBookPoint, activeSearchResultPoints);
     } else {
-      drawGalaxy();
+      requestGalaxyDraw();
     }
   } catch (err) {
     hideLoading();
@@ -1129,9 +1083,9 @@ function renderResults(books, title, latency, targetBook = null, conceptKeywords
 }
 
 function exploreBook(id, title) {
-  switchTab('book');
   document.getElementById('book-input').value = title;
   handleBookSimilarSearch(id);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function escapeHtml(text) {
