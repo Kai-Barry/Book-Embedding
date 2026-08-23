@@ -27,16 +27,25 @@ class BaseEmbedder(ABC):
 
 class LocalGPUEmbedder(BaseEmbedder):
     """
-    High-performance GPU-accelerated embedder using Sentence-Transformers & PyTorch CUDA.
+    High-performance GPU & CPU-accelerated embedder using Sentence-Transformers & PyTorch.
     Default model: BAAI/bge-large-en-v1.5 (1024-dim, state-of-the-art)
     """
     def __init__(self, model_name: str = DEFAULT_LOCAL_MODEL, device: Optional[str] = None):
         self.model_name = model_name
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-        print(f"[Embedder] Initializing Local GPU Embedder: {model_name} on device: {self.device}")
+        self._query_cache = {}
         
-        if self.device == "cuda":
-            print(f"[Embedder] Utilizing GPU: {torch.cuda.get_device_name(0)} (VRAM: {torch.cuda.get_device_properties(0).total_memory / (1024**3):.1f} GB)")
+        # Optimize CPU multi-threading if running on NAS / CPU without GPU
+        if self.device == "cpu":
+            num_cores = os.cpu_count() or 4
+            # Use optimal physical core threads for Intel 12th Gen P-cores
+            opt_threads = min(8, max(2, num_cores // 2))
+            torch.set_num_threads(opt_threads)
+            print(f"[Embedder] Initializing Local CPU Embedder: {model_name} with {opt_threads} PyTorch CPU threads (AVX2/VNNI enabled)")
+        else:
+            print(f"[Embedder] Initializing Local GPU Embedder: {model_name} on device: {self.device}")
+            if torch.cuda.is_available():
+                print(f"[Embedder] Utilizing GPU: {torch.cuda.get_device_name(0)} (VRAM: {torch.cuda.get_device_properties(0).total_memory / (1024**3):.1f} GB)")
 
         from sentence_transformers import SentenceTransformer
         self.model = SentenceTransformer(model_name, device=self.device)
@@ -47,21 +56,23 @@ class LocalGPUEmbedder(BaseEmbedder):
         return self._dim
 
     def embed_texts(self, texts: List[str], batch_size: int = BATCH_SIZE) -> np.ndarray:
-        """Generates normalized embeddings in batches on GPU."""
+        """Generates normalized embeddings in batches."""
         embeddings = self.model.encode(
             texts,
             batch_size=batch_size,
-            show_progress_bar=True,
+            show_progress_bar=len(texts) > 10,
             normalize_embeddings=True,
             convert_to_numpy=True
         )
         return embeddings
 
     def embed_query(self, query: str) -> np.ndarray:
-        """Encodes query for retrieval."""
+        """Encodes query for retrieval with in-memory caching for repeat concept keywords."""
+        if query in self._query_cache:
+            return self._query_cache[query]
+
         # For BGE models, retrieval queries can benefit from instruction prefix if required
         if "bge" in self.model_name.lower():
-            # BGE recommends adding query instruction for retrieval if querying
             query_text = f"Represent this sentence for searching relevant passages: {query}"
         else:
             query_text = query
@@ -71,7 +82,11 @@ class LocalGPUEmbedder(BaseEmbedder):
             normalize_embeddings=True,
             convert_to_numpy=True
         )
-        return emb[0]
+        vec = emb[0]
+        # Keep cache compact (up to 500 queries)
+        if len(self._query_cache) < 500:
+            self._query_cache[query] = vec
+        return vec
 
 
 class GeminiEmbedder(BaseEmbedder):

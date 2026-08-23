@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>Book-Embedding</Name>
+  <Repository>ghcr.io/kai-barry/book-embedding:latest</Repository>
+  <Registry>https://github.com/Kai-Barry/Book-Embedding</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/Kai-Barry/Book-Embedding/issues</Support>
+  <Project>https://github.com/Kai-Barry/Book-Embedding</Project>
+  <Overview>
+    High-Dimensional Book Embedding &amp; Similarity Discovery Engine.
+    Optimized for Intel 12th Gen CPUs using AVX2/VNNI vector acceleration.
+    Features 2D UMAP Galaxy Constellations, dynamic stylistic importance tuning, and instant typo-tolerant catalog search.
+  </Overview>
+  <Category>MediaApp:Books Productivity: Tools: Other:</Category>
+  <WebUI>http://[IP]:[PORT:8000]/</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/Kai-Barry/Book-Embedding/main/unraid-template.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/Kai-Barry/Book-Embedding/main/web/icon.png</Icon>
+  <ExtraParams/>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled/>
+  <DonateText/>
+  <DonateLink/>
+  <Description>
+    High-Dimensional Book Embedding &amp; Similarity Discovery Engine.
+    Optimized for Intel 12th Gen CPUs using AVX2/VNNI vector acceleration.
+  </Description>
+  
+  <!-- Configurable Web UI Port -->
+  <Config Name="WebUI Port" Target="8000" Default="8000" Mode="tcp" Description="Host port for the Book Embedding Web UI (e.g. 8000, 8080, 8501)." Type="Port" Display="always" Required="true" Mask="false">8000</Config>
+  
+  <!-- App Data Path -->
+  <Config Name="App Data Path" Target="/app/data" Default="/mnt/user/appdata/book-embedding/data" Mode="rw" Description="Container path for catalog metadata, embeddings, and vector indices." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/book-embedding/data</Config>
+  
+  <!-- HuggingFace Model Cache -->
+  <Config Name="Model Cache" Target="/root/.cache" Default="/mnt/user/appdata/book-embedding/cache" Mode="rw" Description="Persistent model cache path so HuggingFace models persist across container updates." Type="Path" Display="advanced" Required="false" Mask="false">/mnt/user/appdata/book-embedding/cache</Config>
+  
+  <!-- Device Selection (cpu or cuda) -->
+  <Config Name="Compute Device" Target="DEVICE" Default="cpu" Description="Compute backend (cpu for Intel 12th Gen i5, cuda if passing an NVIDIA GPU)." Type="Variable" Display="always" Required="true" Mask="false">cpu</Config>
+
+  <!-- Container Port Env -->
+  <Config Name="Container Port Env" Target="PORT" Default="8000" Description="Internal container port bound by Uvicorn." Type="Variable" Display="advanced" Required="true" Mask="false">8000</Config>
+
+  <!-- Intel CPU Threads -->
+  <Config Name="Intel OpenMP Threads" Target="OMP_NUM_THREADS" Default="4" Description="Number of CPU threads allocated for parallel vector math." Type="Variable" Display="advanced" Required="false" Mask="false">4</Config>
+</Container>

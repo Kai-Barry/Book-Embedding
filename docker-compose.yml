@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  book-embedding:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: book-embedding:latest
+    container_name: book-embedding
+    restart: unless-stopped
+    ports:
+      # Change 8000 on the left to whatever free port you want on your NAS (e.g. 8501:8000)
+      - "${HOST_PORT:-8000}:${PORT:-8000}"
+    environment:
+      - PORT=${PORT:-8000}
+      - HOST=0.0.0.0
+      - DEVICE=cpu
+      - OMP_NUM_THREADS=4
+      - MKL_NUM_THREADS=4
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Persistent storage for books metadata and embeddings
+      - ./data:/app/data
+      # Persistent cache for HuggingFace embeddings models
+      - ./cache:/root/.cache
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-8000}/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
