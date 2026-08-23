@@ -25,6 +25,11 @@ let currentConceptKeywords = [];
 let activeKeywords = new Set();
 let currentTargetId = null;
 
+// Autocomplete State
+let debounceTimer = null;
+let autocompleteItems = [];
+let activeAutocompleteIndex = -1;
+
 // Modal & Navigation State
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeBookModal();
