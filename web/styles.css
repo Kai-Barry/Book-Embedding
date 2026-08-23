@@ -105,8 +105,7 @@ header {
   50% { opacity: 0.5; transform: scale(1.2); }
 }
 
-/* Search Hero Panel */
-.search-hero {
+/* Step Cards */
 .step-card {
   background: var(--bg-card);
   backdrop-filter: blur(16px);
