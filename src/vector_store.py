@@ -14,7 +14,22 @@ class BookVectorStore:
     
     def __init__(self, index_name: str = "book_index"):
         self.index_name = index_name
-        self.db_dir = VECTOR_DB_DIR / index_name
+        
+        # Smart path resolution for local dev, Docker container mounts (/app/data), and Unraid
+        candidate_dirs = [
+            VECTOR_DB_DIR / index_name,
+            VECTOR_DB_DIR,
+            VECTOR_DB_DIR.parent / index_name,
+            VECTOR_DB_DIR.parent
+        ]
+        
+        chosen_dir = VECTOR_DB_DIR / index_name
+        for cdir in candidate_dirs:
+            if (cdir / "metadata.parquet").exists() and (cdir / "embeddings.npy").exists():
+                chosen_dir = cdir
+                break
+                
+        self.db_dir = chosen_dir
         self.db_dir.mkdir(parents=True, exist_ok=True)
         
         self.metadata_file = self.db_dir / "metadata.parquet"
