@@ -603,15 +603,16 @@ function initGalaxyCanvas() {
   function resize() {
     if (!galaxyCanvas || !galaxyCanvas.parentElement) return;
     const rect = galaxyCanvas.parentElement.getBoundingClientRect();
-    const w = rect.width > 0 ? rect.width : 1200;
-    const h = rect.height > 0 ? rect.height : 480;
-    galaxyCanvas.width = w;
-    galaxyCanvas.height = h;
-    drawGalaxy();
+    if (rect.width > 0 && rect.height > 0) {
+      galaxyCanvas.width = rect.width;
+      galaxyCanvas.height = rect.height;
+      requestGalaxyDraw();
+    }
   }
   window.addEventListener('resize', resize);
   setTimeout(resize, 50);
   setTimeout(resize, 200);
+  setTimeout(resize, 500);
 
   // Mouse pan & zoom with gesture disambiguation (>= 5px travel is drag, not click)
   galaxyCanvas.addEventListener('mousedown', (e) => {
@@ -942,13 +943,19 @@ function drawGalaxy() {
 function handleGalaxyHover(e) {
   if (!galaxyCanvas || galaxyData.length === 0) return;
   const rect = galaxyCanvas.getBoundingClientRect();
-  const mouseX = e.clientX - rect.left;
-  const mouseY = e.clientY - rect.top;
+  if (rect.width === 0 || rect.height === 0) return;
+
+  // Exact pixel scaling between CSS bounding box and canvas internal resolution
+  const scaleX = galaxyCanvas.width / rect.width;
+  const scaleY = galaxyCanvas.height / rect.height;
+
+  const mouseX = (e.clientX - rect.left) * scaleX;
+  const mouseY = (e.clientY - rect.top) * scaleY;
 
   // Convert mouse screen coordinates to data coordinates
   const dataMouseX = (mouseX - galaxyTransform.x) / galaxyTransform.scale;
   const dataMouseY = (mouseY - galaxyTransform.y) / galaxyTransform.scale;
-  const dataRadius = 15 / galaxyTransform.scale;
+  const dataRadius = 18 / galaxyTransform.scale;
 
   const centerGx = Math.floor(dataMouseX / GRID_CELL_SIZE);
   const centerGy = Math.floor(dataMouseY / GRID_CELL_SIZE);
@@ -981,9 +988,11 @@ function handleGalaxyHover(e) {
 
   const tooltip = document.getElementById('galaxy-tooltip');
   if (hoveredPoint && tooltip) {
+    const cssX = e.clientX - rect.left;
+    const cssY = e.clientY - rect.top;
     tooltip.style.display = 'block';
-    tooltip.style.left = `${mouseX + 15}px`;
-    tooltip.style.top = `${mouseY + 15}px`;
+    tooltip.style.left = `${cssX + 15}px`;
+    tooltip.style.top = `${cssY + 15}px`;
     tooltip.innerHTML = `
       <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">${escapeHtml(hoveredPoint.title)}</div>
       <div style="color: var(--accent-cyan); font-size: 0.8rem; margin: 0.2rem 0;">by ${escapeHtml(hoveredPoint.author || 'Unknown')}</div>
