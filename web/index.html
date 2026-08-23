@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/static/styles.css?v=2">
 </head>
 <body>
   <div class="container">
@@ -25,7 +25,6 @@
       </div>
     </header>
 
-    <main>
     <main>
       <!-- Step 1: Search & Select Target Book -->
       <section class="step-card step-card-active" id="step-1-section">
@@ -46,10 +45,10 @@
             autocomplete="off"
             oninput="handleCatalogAutocomplete(this.value)"
             onkeydown="handleAutocompleteKeydown(event)"
-            onkeypress="if(event.key === 'Enter') handleBookSimilarSearch()"
+            onkeypress="if(event.key === 'Enter') handleBookSelection()"
           />
           <div id="autocomplete-list" class="autocomplete-results"></div>
-          <button class="action-btn" id="btn-search-book" onclick="handleBookSimilarSearch()">
+          <button class="action-btn" id="btn-search-book" onclick="handleBookSelection()">
             <span>Select Book</span>
             <span>➔</span>
           </button>

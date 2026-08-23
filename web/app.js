@@ -286,17 +286,159 @@ function hideLoading() {
   document.getElementById('loading').style.display = 'none';
 }
 
-async function handleBookSimilarSearch(bookIdOrTitle, isReRank = false) {
+// Distinct 3-Stage Workflow Controller:
+// Stage 1: Select Book -> loads book into Step 2 (Tuning Panel). Step 3 is hidden until user tunes or clicks search.
+// Stage 2: User adjusts sliders / keywords.
+// Stage 3: User clicks "Apply Weights & Search" -> reveals 2D Constellation & Recommendations.
+
+async function handleBookSelection(bookIdOrTitle) {
   const target = bookIdOrTitle || document.getElementById('book-input').value.trim();
+  if (!target) return;
+  currentTargetId = target;
+
+  showLoading(`Loading book details for "${target}"...`);
+
+  try {
+    const res = await fetch(`/api/book/${encodeURIComponent(target)}`);
+    if (!res.ok) throw new Error('Book not found');
+    const book = await res.json();
+    hideLoading();
+
+    // Fetch concept keywords for this target book
+    const kwRes = await fetch(`/api/similar/${encodeURIComponent(target)}?top_k=1`);
+    const kwData = await kwRes.json();
+    currentConceptKeywords = kwData.concept_keywords || [];
+    activeKeywords = new Set(currentConceptKeywords);
+
+    // Save target book coordinates
+    targetBookPoint = {
+      id: book.id,
+      title: book.title,
+      genres: book.genres || 'General',
+      x: kwData.target_book ? kwData.target_book.x : 0,
+      y: kwData.target_book ? kwData.target_book.y : 0
+    };
+
+    // Show Step 2 (Selected Book & Tuning Panel)
+    const step2 = document.getElementById('step-2-section');
+    const step3 = document.getElementById('step-3-section');
+    const emptyState = document.getElementById('empty-state');
+    if (step2) step2.style.display = 'block';
+    if (step3) step3.style.display = 'none'; // Step 3 stays hidden until user initiates search!
+    if (emptyState) emptyState.style.display = 'none';
+
+    renderTargetSpotlight(book, currentConceptKeywords);
+
+    // Smoothly scroll to Step 2
+    step2.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (err) {
+    hideLoading();
+    alert('Could not load book: ' + err.message);
+  }
+}
+
+function renderTargetSpotlight(targetBook, conceptKeywords = []) {
+  const spotlightCard = document.getElementById('target-book-spotlight');
+  if (!spotlightCard || !targetBook) return;
+
+  const genres = (targetBook.genres || 'General')
+    .split(',')
+    .slice(0, 4)
+    .map(g => `<span class="genre-tag" style="background:rgba(245, 158, 11, 0.15); color:#fde68a; border-color:rgba(245, 158, 11, 0.3);">${escapeHtml(g.trim())}</span>`)
+    .join('');
+
+  const kws = conceptKeywords.length > 0 ? conceptKeywords : currentConceptKeywords;
+  const keywordPillsHtml = kws.map(kw => {
+    const isActive = activeKeywords.has(kw);
+    return `<span class="concept-pill ${isActive ? 'active' : ''}" data-keyword="${escapeHtml(kw)}" onclick="toggleConceptKeyword('${escapeHtml(kw)}')">🏷️ ${escapeHtml(kw)}</span>`;
+  }).join('');
+
+  spotlightCard.innerHTML = `
+    <div class="spotlight-header">
+      <div>
+        <span class="spotlight-anchor-tag">⭐ Selected Target Book</span>
+        <h2 style="font-size: 1.6rem; font-weight: 800; color: #ffffff; margin-top: 0.4rem; cursor: pointer;" onclick="openBookModal('${escapeHtml(targetBook.id)}')">${escapeHtml(targetBook.title)}</h2>
+        <div style="font-size: 1rem; color: var(--text-secondary); margin-top: 0.2rem;">
+          by <strong style="color: #fff;">${escapeHtml(targetBook.author || 'Unknown')}</strong> &bull; 
+          <span style="color: var(--text-muted);">${escapeHtml(targetBook.pub_date || '')}</span>
+        </div>
+      </div>
+      <div style="display: flex; gap: 0.6rem;">
+        <button class="action-btn" style="background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.5); color: #fbbf24;" onclick="openBookModal('${escapeHtml(targetBook.id)}')">
+          📖 View Full Details
+        </button>
+      </div>
+    </div>
+    <div class="genre-tags">${genres}</div>
+    <p style="font-size: 0.95rem; color: #cbd5e1; line-height: 1.6; margin: 0.5rem 0;">${escapeHtml(targetBook.summary)}</p>
+
+    <!-- Interactive Vector Importance Tuning Sliders & Clustered Concept Pills -->
+    <div class="tuning-panel">
+      <div class="tuning-header">
+        <div>
+          <span class="tuning-title">🎛️ Tune Matching Vector Importance & Clustered Motifs</span>
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Adjust sliders and keywords below, then click to calculate Step 3</div>
+        </div>
+        <div style="display: flex; gap: 0.6rem;">
+          <button id="btn-apply-tuning" class="action-btn apply-tuning-btn pending-changes" onclick="handleBookSimilarSearch(currentTargetId)">
+            ⚡ Run Vector Search & Discover Similar ➔
+          </button>
+        </div>
+      </div>
+
+      <div class="sliders-grid">
+        <div class="slider-group">
+          <div class="slider-label-row">
+            <span>📖 Plot & Premise</span>
+            <span id="val-plot">${Math.round(currentWeights.plot * 100)}%</span>
+          </div>
+          <input type="range" class="custom-range" min="0" max="2" step="0.1" value="${currentWeights.plot}" oninput="onWeightSliderChange('plot', this.value)" />
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label-row">
+            <span>🌌 Atmospheric Mood</span>
+            <span id="val-tone">${Math.round(currentWeights.tone * 100)}%</span>
+          </div>
+          <input type="range" class="custom-range" min="0" max="2" step="0.1" value="${currentWeights.tone}" oninput="onWeightSliderChange('tone', this.value)" />
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label-row">
+            <span>🎯 Writing Style & POV</span>
+            <span id="val-style">${Math.round(currentWeights.style * 100)}%</span>
+          </div>
+          <input type="range" class="custom-range" min="0" max="2" step="0.1" value="${currentWeights.style}" oninput="onWeightSliderChange('style', this.value)" />
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label-row">
+            <span>⏱️ Story Pacing</span>
+            <span id="val-pacing">${Math.round(currentWeights.pacing * 100)}%</span>
+          </div>
+          <input type="range" class="custom-range" min="0" max="2" step="0.1" value="${currentWeights.pacing}" oninput="onWeightSliderChange('pacing', this.value)" />
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size: 0.8rem; font-weight: 600; color: #94a3b8; margin-bottom: 0.3rem;">🎯 Clustered Concept Keywords (Toggle to filter/boost):</div>
+        <div class="concept-pills-row">
+          ${keywordPillsHtml}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function handleBookSimilarSearch(bookIdOrTitle) {
+  const target = bookIdOrTitle || currentTargetId || document.getElementById('book-input').value.trim();
   if (!target) return;
   currentTargetId = target;
 
   const topK = parseInt(document.getElementById('topk-select').value);
   const genre = document.getElementById('genre-select').value;
 
-  if (!isReRank) {
-    showLoading(`Finding books with nearest embedding vectors to "${target}"...`);
-  }
+  showLoading(`Searching 25,101 books for nearest weighted vectors to "${target}"...`);
 
   try {
     const kwParams = Array.from(activeKeywords).join(',');
@@ -312,21 +454,14 @@ async function handleBookSimilarSearch(bookIdOrTitle, isReRank = false) {
     const data = await res.json();
     hideLoading();
 
-    // Reveal Step 2 and Step 3
-    const step2 = document.getElementById('step-2-section');
+    // Reveal Step 3 (Constellation and Recommendations)
     const step3 = document.getElementById('step-3-section');
-    const emptyState = document.getElementById('empty-state');
-    if (step2) step2.style.display = 'block';
-    if (step3) step3.style.display = 'block';
-    if (emptyState) emptyState.style.display = 'none';
-
-    // Update concept keywords state if new book
-    if (!isReRank && data.concept_keywords) {
-      currentConceptKeywords = data.concept_keywords;
-      activeKeywords = new Set(currentConceptKeywords);
+    if (step3) {
+      step3.style.display = 'block';
+      setTimeout(() => step3.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
     }
 
-    renderResults(data.results, `Books similar to "${target}"`, data.latency_ms, data.target_book, data.concept_keywords);
+    renderResults(data.results, `Books similar to "${target}"`, data.latency_ms);
     
     // Set Target with exact 2D coordinates from API
     activeSearchResultPoints = data.results || [];
@@ -339,22 +474,9 @@ async function handleBookSimilarSearch(bookIdOrTitle, isReRank = false) {
         x: data.target_book.x,
         y: data.target_book.y
       };
-    } else {
-      let matchedTarget = galaxyData.find(p => p.title.toLowerCase().includes(target.toLowerCase()) || p.id === data.book_id);
-      targetBookPoint = matchedTarget || {
-        id: data.book_id,
-        title: data.target_book ? data.target_book.title : target,
-        genres: data.target_book ? data.target_book.genres : (activeSearchResultPoints[0]?.genres || 'General'),
-        x: activeSearchResultPoints[0] ? activeSearchResultPoints[0].x : 0,
-        y: activeSearchResultPoints[0] ? activeSearchResultPoints[0].y : 0
-      };
     }
 
-    if (!isReRank) {
-      focusGalaxyOnTarget(targetBookPoint, activeSearchResultPoints);
-    } else {
-      requestGalaxyDraw();
-    }
+    focusGalaxyOnTarget(targetBookPoint, activeSearchResultPoints);
   } catch (err) {
     hideLoading();
     alert('Search error: ' + err.message);
@@ -468,7 +590,7 @@ function selectAutocompleteItem(index) {
     const item = autocompleteItems[index];
     document.getElementById('book-input').value = item.title;
     document.getElementById('autocomplete-list').style.display = 'none';
-    handleBookSimilarSearch(item.id);
+    handleBookSelection(item.id);
   }
 }
 
@@ -1084,7 +1206,7 @@ function renderResults(books, title, latency, targetBook = null, conceptKeywords
 
 function exploreBook(id, title) {
   document.getElementById('book-input').value = title;
-  handleBookSimilarSearch(id);
+  handleBookSelection(id);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
