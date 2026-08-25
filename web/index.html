@@ -30,140 +30,248 @@
       </div>
     </header>
 
+    <!-- Top Observatory Mode Navigation -->
+    <nav class="mode-navigation">
+      <button id="mode-anchor-btn" class="mode-nav-btn active" onclick="switchAppMode('anchor')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        <span>Single Anchor Explorer</span>
+      </button>
+      <button id="mode-profile-btn" class="mode-nav-btn" onclick="switchAppMode('profile')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M12 6v14"/><path d="M16 6h4"/><path d="M16 10h4"/><path d="M16 14h4"/></svg>
+        <span>Taste Profile Synthesizer</span>
+        <span class="nav-badge-new">Multi-Book</span>
+      </button>
+    </nav>
+
     <main>
-      <!-- Step 1: Search & Select Target Book -->
-      <section class="step-card step-card-active" id="step-1-section">
-        <div class="step-header">
-          <div class="step-badge">Stage 01</div>
-          <div>
-            <h2 class="step-title">Select Anchor Literature</h2>
-            <p class="step-subtitle">Search any title or author across 25,101 indexed literary works to establish your anchor vector</p>
-          </div>
-        </div>
-
-        <div class="input-box-wrapper" style="margin-top: 1.2rem;">
-          <div class="search-field-wrapper" style="position: relative; flex: 1;">
-            <div class="search-input-prefix">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            </div>
-            <input 
-              type="text" 
-              id="book-input" 
-              class="search-input" 
-              placeholder="Search title or author (e.g. Iain Reid, Dune, Three-Body Problem, Frankenstein, Piranesi)..."
-              autocomplete="off"
-              oninput="handleCatalogAutocomplete(this.value)"
-              onkeydown="handleAutocompleteKeydown(event)"
-              onkeypress="if(event.key === 'Enter') handleBookSelection()"
-            />
-            <div id="autocomplete-list" class="autocomplete-results"></div>
-          </div>
-          <button class="action-btn btn-search-primary" id="btn-search-book" onclick="handleBookSelection()">
-            <span>Load Literature</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          </button>
-        </div>
-
-        <!-- Matches & Index Telemetry Strip -->
-        <div class="filter-bar" style="margin-top: 1.1rem; justify-content: space-between;">
-          <div class="filter-item">
-            <label for="topk-select">Matches to Return:</label>
-            <select id="topk-select" class="select-box">
-              <option value="6">6 Recommendations</option>
-              <option value="12" selected>12 Recommendations</option>
-              <option value="24">24 Recommendations</option>
-              <option value="48">48 Recommendations</option>
-            </select>
-          </div>
-          <div id="index-stats" class="catalog-index-stats">
-            Index: Loading corpus...
-          </div>
-        </div>
-      </section>
-
-      <!-- Step 2: Selected Book Spotlight & Feature Importance Tuning -->
-      <section id="step-2-section" class="step-card" style="display: none; margin-top: 2rem;">
-        <div class="step-header">
-          <div class="step-badge step-badge-stage2">Stage 02</div>
-          <div>
-            <h2 class="step-title">Vector Synthesis & Weight Studio</h2>
-            <p class="step-subtitle">Calibrate 5-dimensional weights and thematic sub-motifs to guide the semantic retrieval manifold</p>
-          </div>
-        </div>
-
-        <div id="target-book-spotlight" class="target-spotlight-card" style="margin-top: 1.2rem;"></div>
-      </section>
-
-      <!-- Step 3: 2D Vector Space Constellation & Recommendations -->
-      <section id="step-3-section" class="step-card" style="display: none; margin-top: 2rem;">
-        <div class="step-header" style="justify-content: space-between;">
-          <div style="display: flex; align-items: center; gap: 1rem;">
-            <div class="step-badge step-badge-stage3">Stage 03</div>
+      <!-- MODE 1: SINGLE ANCHOR EXPLORER -->
+      <div id="anchor-mode-container">
+        <!-- Step 1: Search & Select Target Book -->
+        <section class="step-card step-card-active" id="step-1-section">
+          <div class="step-header">
+            <div class="step-badge">Stage 01</div>
             <div>
-              <h2 class="step-title">The Semantic Constellation & Discovered Neighbors</h2>
-              <p class="step-subtitle">Interactive geometric projection of vector proximity and narrative similarity rays</p>
+              <h2 class="step-title">Select Anchor Literature</h2>
+              <p class="step-subtitle">Search any title or author across 25,101 indexed literary works to establish your anchor vector</p>
             </div>
           </div>
-          <div class="constellation-actions-row">
-            <button id="btn-focus-constellation" class="action-btn action-btn-subtle" onclick="toggleFocusConstellation()">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><path d="M10.4 10.4 6.4 17.6"/><path d="m17.6 6.4-7.2 4"/></svg>
-              <span>Isolate Constellation</span>
+
+          <div class="input-box-wrapper" style="margin-top: 1.2rem;">
+            <div class="search-field-wrapper" style="position: relative; flex: 1;">
+              <div class="search-input-prefix">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              </div>
+              <input 
+                type="text" 
+                id="book-input" 
+                class="search-input" 
+                placeholder="Search title or author (e.g. Iain Reid, Dune, Three-Body Problem, Frankenstein, Piranesi)..."
+                autocomplete="off"
+                oninput="handleCatalogAutocomplete(this.value)"
+                onkeydown="handleAutocompleteKeydown(event)"
+                onkeypress="if(event.key === 'Enter') handleBookSelection()"
+              />
+              <div id="autocomplete-list" class="autocomplete-results"></div>
+            </div>
+            <button class="action-btn btn-search-primary" id="btn-search-book" onclick="handleBookSelection()">
+              <span>Load Literature</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
             </button>
-            <div class="zoom-btn-group">
-              <button class="action-btn zoom-btn" title="Zoom In (Up to 50x)" onclick="zoomGalaxy(1.35)">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-              </button>
-              <button class="action-btn zoom-btn" title="Zoom Out" onclick="zoomGalaxy(0.75)">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-              </button>
-              <button class="action-btn zoom-btn" onclick="resetGalaxyView()" title="Center Observatory">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-                <span>Recenter</span>
-              </button>
+          </div>
+
+          <!-- Matches & Index Telemetry Strip -->
+          <div class="filter-bar" style="margin-top: 1.1rem; justify-content: space-between;">
+            <div class="filter-item">
+              <label for="topk-select">Matches to Return:</label>
+              <select id="topk-select" class="select-box">
+                <option value="6">6 Recommendations</option>
+                <option value="12" selected>12 Recommendations</option>
+                <option value="24">24 Recommendations</option>
+                <option value="48">48 Recommendations</option>
+              </select>
+            </div>
+            <div id="index-stats" class="catalog-index-stats">
+              Index: Loading corpus...
             </div>
           </div>
-        </div>
+        </section>
 
-        <!-- Galaxy Key Legend -->
-        <div class="genre-legend-bar" style="margin-top: 1.2rem; margin-bottom: 0.8rem;">
-          <span class="genre-legend-label">Spectral Domain:</span>
-          <span class="legend-pill" style="--pill-color: #22d3ee;" onclick="filterByLegend('Science Fiction')"><span class="legend-dot" style="background:#22d3ee;"></span> Speculative & Sci-Fi</span>
-          <span class="legend-pill" style="--pill-color: #f43f5e;" onclick="filterByLegend('Horror')"><span class="legend-dot" style="background:#f43f5e;"></span> Gothic & Horror</span>
-          <span class="legend-pill" style="--pill-color: #c084fc;" onclick="filterByLegend('Fantasy')"><span class="legend-dot" style="background:#c084fc;"></span> Mythic & Fantasy</span>
-          <span class="legend-pill" style="--pill-color: #f59e0b;" onclick="filterByLegend('Mystery')"><span class="legend-dot" style="background:#f59e0b;"></span> Noir & Mystery</span>
-          <span class="legend-pill" style="--pill-color: #10b981;" onclick="filterByLegend('History')"><span class="legend-dot" style="background:#10b981;"></span> Historical & Non-Fiction</span>
-          <span class="legend-pill" style="--pill-color: #fb7185;" onclick="filterByLegend('Romance')"><span class="legend-dot" style="background:#fb7185;"></span> Drama & Romance</span>
-          <span class="legend-pill" style="--pill-color: #94a3b8;" onclick="filterByLegend('')"><span class="legend-dot" style="background:#94a3b8;"></span> Literary Fiction & All</span>
-        </div>
+        <!-- Step 2: Selected Book Spotlight & Feature Importance Tuning -->
+        <section id="step-2-section" class="step-card" style="display: none; margin-top: 2rem;">
+          <div class="step-header">
+            <div class="step-badge step-badge-stage2">Stage 02</div>
+            <div>
+              <h2 class="step-title">Vector Synthesis & Weight Studio</h2>
+              <p class="step-subtitle">Calibrate 5-dimensional weights and thematic sub-motifs to guide the semantic retrieval manifold</p>
+            </div>
+          </div>
 
-        <!-- 2D Canvas Container -->
-        <div id="galaxy-view" class="galaxy-viewport">
-          <canvas id="galaxy-canvas" width="1200" height="480"></canvas>
-          <div id="galaxy-tooltip" class="galaxy-tooltip-card"></div>
-          <div id="zoom-indicator" class="galaxy-zoom-badge">Zoom: 1.0x</div>
-        </div>
+          <div id="target-book-spotlight" class="target-spotlight-card" style="margin-top: 1.2rem;"></div>
+        </section>
 
-        <!-- Recommendation Cards List -->
-        <div class="results-header" id="results-header" style="margin-top: 2rem; display: none;">
-          <div class="results-count" id="results-count">Results</div>
-          <div class="latency-tag" id="latency-tag">0.0 ms</div>
-        </div>
+        <!-- Step 3: 2D Vector Space Constellation & Recommendations -->
+        <section id="step-3-section" class="step-card" style="display: none; margin-top: 2rem;">
+          <div class="step-header" style="justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <div class="step-badge step-badge-stage3">Stage 03</div>
+              <div>
+                <h2 class="step-title">The Semantic Constellation & Discovered Neighbors</h2>
+                <p class="step-subtitle">Interactive geometric projection of vector proximity and narrative similarity rays</p>
+              </div>
+            </div>
+            <div class="constellation-actions-row">
+              <button id="btn-focus-constellation" class="action-btn action-btn-subtle" onclick="toggleFocusConstellation()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><path d="M10.4 10.4 6.4 17.6"/><path d="m17.6 6.4-7.2 4"/></svg>
+                <span>Isolate Constellation</span>
+              </button>
+              <div class="zoom-btn-group">
+                <button class="action-btn zoom-btn" title="Zoom In (Up to 50x)" onclick="zoomGalaxy(1.35)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                </button>
+                <button class="action-btn zoom-btn" title="Zoom Out" onclick="zoomGalaxy(0.75)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                </button>
+                <button class="action-btn zoom-btn" onclick="resetGalaxyView()" title="Center Observatory">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                  <span>Recenter</span>
+                </button>
+              </div>
+            </div>
+          </div>
 
-        <div id="loading" class="loading-state" style="display: none; margin: 2rem 0;">
-          <div class="spinner"></div>
-          <p id="loading-msg">Computing dense vector projections on CUDA RTX 4080 GPU...</p>
-        </div>
+          <!-- Galaxy Key Legend -->
+          <div class="genre-legend-bar" style="margin-top: 1.2rem; margin-bottom: 0.8rem;">
+            <span class="genre-legend-label">Spectral Domain:</span>
+            <span class="legend-pill" style="--pill-color: #22d3ee;" onclick="filterByLegend('Science Fiction')"><span class="legend-dot" style="background:#22d3ee;"></span> Speculative & Sci-Fi</span>
+            <span class="legend-pill" style="--pill-color: #f43f5e;" onclick="filterByLegend('Horror')"><span class="legend-dot" style="background:#f43f5e;"></span> Gothic & Horror</span>
+            <span class="legend-pill" style="--pill-color: #c084fc;" onclick="filterByLegend('Fantasy')"><span class="legend-dot" style="background:#c084fc;"></span> Mythic & Fantasy</span>
+            <span class="legend-pill" style="--pill-color: #f59e0b;" onclick="filterByLegend('Mystery')"><span class="legend-dot" style="background:#f59e0b;"></span> Noir & Mystery</span>
+            <span class="legend-pill" style="--pill-color: #10b981;" onclick="filterByLegend('History')"><span class="legend-dot" style="background:#10b981;"></span> Historical & Non-Fiction</span>
+            <span class="legend-pill" style="--pill-color: #fb7185;" onclick="filterByLegend('Romance')"><span class="legend-dot" style="background:#fb7185;"></span> Drama & Romance</span>
+            <span class="legend-pill" style="--pill-color: #94a3b8;" onclick="filterByLegend('')"><span class="legend-dot" style="background:#94a3b8;"></span> Literary Fiction & All</span>
+          </div>
 
-        <div id="books-grid" class="books-grid" style="margin-top: 1.5rem;"></div>
-      </section>
+          <!-- 2D Canvas Container -->
+          <div id="galaxy-view" class="galaxy-viewport">
+            <canvas id="galaxy-canvas" width="1200" height="480"></canvas>
+            <div id="galaxy-tooltip" class="galaxy-tooltip-card"></div>
+            <div id="zoom-indicator" class="galaxy-zoom-badge">Zoom: 1.0x</div>
+          </div>
 
-      <!-- Empty State Initial Landing -->
-      <div id="empty-state" class="empty-state" style="margin-top: 3rem;">
-        <div class="empty-state-icon-container">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-book-svg"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/><path d="M12 7v14"/></svg>
+          <!-- Recommendation Cards List -->
+          <div class="results-header" id="results-header" style="margin-top: 2rem; display: none;">
+            <div class="results-count" id="results-count">Results</div>
+            <div class="latency-tag" id="latency-tag">0.0 ms</div>
+          </div>
+
+          <div id="loading" class="loading-state" style="display: none; margin: 2rem 0;">
+            <div class="spinner"></div>
+            <p id="loading-msg">Computing dense vector projections on CUDA RTX 4080 GPU...</p>
+          </div>
+
+          <div id="books-grid" class="books-grid" style="margin-top: 1.5rem;"></div>
+        </section>
+
+        <!-- Empty State Initial Landing -->
+        <div id="empty-state" class="empty-state" style="margin-top: 3rem;">
+          <div class="empty-state-icon-container">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-book-svg"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/><path d="M12 7v14"/></svg>
+          </div>
+          <h3 class="empty-state-title">Select Anchor Literature to Begin Exploration</h3>
+          <p class="empty-state-desc">Input any literary work in Stage 01 above to decompose its stylistic DNA, tune dimensional importance, and project mathematical vector neighbors in coordinate space.</p>
         </div>
-        <h3 class="empty-state-title">Select Anchor Literature to Begin Exploration</h3>
-        <p class="empty-state-desc">Input any literary work in Stage 01 above to decompose its stylistic DNA, tune dimensional importance, and project mathematical vector neighbors in coordinate space.</p>
+      </div>
+
+      <!-- MODE 2: MULTI-BOOK TASTE PROFILE SYNTHESIZER -->
+      <div id="profile-mode-container" style="display: none;">
+        <section class="step-card step-card-active">
+          <div class="step-header">
+            <div class="step-badge" style="background: linear-gradient(135deg, #0284c7, #38bdf8); color:#07090e;">Taste DNA</div>
+            <div>
+              <h2 class="step-title">Multi-Book Reading History Synthesizer</h2>
+              <p class="step-subtitle">Curate your personal reading history, rank favorite works (1–5★), and highlight key narrative aspects to synthesize multi-vector recommendations</p>
+            </div>
+          </div>
+
+          <!-- Starter Preset Profiles -->
+          <div class="profile-starter-strip" style="margin-top: 1.2rem;">
+            <span class="presets-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+              <span>Instant Starter Shelves:</span>
+            </span>
+            <button class="preset-chip" onclick="loadStarterProfile('scifi')">Cosmic Sci-Fi & Speculative</button>
+            <button class="preset-chip" onclick="loadStarterProfile('gothic')">Dark Gothic & Dread</button>
+            <button class="preset-chip" onclick="loadStarterProfile('fantasy')">Epic Fantasy & Lore</button>
+            <button class="preset-chip" onclick="loadStarterProfile('thriller')">Psychological Thrillers</button>
+            <button class="preset-chip" style="border-color: rgba(244, 63, 94, 0.4); color: #fda4af;" onclick="clearProfileHistory()">Clear Shelf</button>
+          </div>
+
+          <!-- Search & Add to Shelf -->
+          <div class="input-box-wrapper" style="margin-top: 1.2rem;">
+            <div class="search-field-wrapper" style="position: relative; flex: 1;">
+              <div class="search-input-prefix">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              </div>
+              <input 
+                type="text" 
+                id="profile-search-input" 
+                class="search-input" 
+                placeholder="Search and add a book you've read to your bookshelf (e.g. Dune, Piranesi, Frankenstein, Neuromancer)..."
+                autocomplete="off"
+                oninput="handleProfileAutocomplete(this.value)"
+                onkeydown="handleProfileAutocompleteKeydown(event)"
+                onkeypress="if(event.key === 'Enter') handleProfileBookAdd()"
+              />
+              <div id="profile-autocomplete-list" class="autocomplete-results"></div>
+            </div>
+            <button class="action-btn btn-search-primary" onclick="handleProfileBookAdd()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              <span>Add to Shelf</span>
+            </button>
+          </div>
+
+          <!-- Live Taste DNA Telemetry Dashboard -->
+          <div id="taste-dna-dashboard" class="taste-dna-dashboard" style="margin-top: 1.4rem;"></div>
+
+          <!-- Bookshelf Grid Container -->
+          <div style="margin-top: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+              <h3 style="font-family: var(--font-serif); font-size: 1.15rem; color: #ffffff; display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="gold-icon"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/></svg>
+                <span>Your Reading Bookshelf (<span id="shelf-count">0</span> books)</span>
+              </h3>
+              <div style="font-size: 0.76rem; color: var(--text-muted);">
+                Rank (1–5★) & pick 1–2 qualities you liked most per book
+              </div>
+            </div>
+            <div id="profile-bookshelf-grid" class="bookshelf-grid"></div>
+          </div>
+
+          <!-- Synthesis CTA & Controls -->
+          <div class="studio-footer-toolbar" style="margin-top: 1.8rem;">
+            <div style="display: flex; align-items: center; gap: 0.8rem;">
+              <label for="profile-topk-select" style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Matches:</label>
+              <select id="profile-topk-select" class="select-box">
+                <option value="6">6 Recommendations</option>
+                <option value="12" selected>12 Recommendations</option>
+                <option value="24">24 Recommendations</option>
+              </select>
+            </div>
+            <button id="btn-synthesize-profile" class="action-btn apply-tuning-btn pending-changes" onclick="synthesizeProfileRecommendations()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+              <span>Synthesize Multi-Book Recommendations ➔</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Profile Results Section -->
+        <section id="profile-results-section" class="step-card" style="display: none; margin-top: 2rem;">
+          <div class="results-header" style="display: flex;">
+            <div class="results-count" id="profile-results-count">Profile Synthesized Recommendations</div>
+            <div class="latency-tag" id="profile-latency-tag">0.0 ms</div>
+          </div>
+          <div id="profile-books-grid" class="books-grid" style="margin-top: 1.5rem;"></div>
+        </section>
       </div>
     </main>
   </div>

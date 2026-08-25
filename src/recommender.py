@@ -526,3 +526,296 @@ class BookRecommender:
         from collections import Counter
         counts = Counter(all_genres)
         return [g for g, _ in counts.most_common(50)]
+
+    def compute_taste_dna(self, history: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Analyzes user's reading history to extract their Taste DNA profile.
+        """
+        from collections import Counter
+        if not history or self.store.df is None:
+            return {
+                "total_books": 0,
+                "avg_rating": 0.0,
+                "top_genres": [],
+                "top_aspects": [],
+                "taste_archetype": "Curious Explorer"
+            }
+
+        genre_counts = Counter()
+        aspect_counts = Counter()
+        ratings = []
+        df = self.store.df
+
+        for item in history:
+            book_id = str(item.get("id", ""))
+            rating = float(item.get("rating", 4.0))
+            aspects = item.get("liked_aspects", [])
+            ratings.append(rating)
+
+            for a in aspects:
+                aspect_counts[a] += rating / 5.0
+
+            # Find matching row in catalog
+            row_match = df[df["id"].astype(str) == book_id]
+            if not row_match.empty:
+                row = row_match.iloc[0]
+                book_genres = [g.strip() for g in str(row.get("genres", "")).split(",") if g.strip() and g.strip() != "General"]
+                for bg in book_genres:
+                    genre_counts[bg] += (rating - 1.0)
+
+        total_genre_weight = sum(genre_counts.values()) or 1.0
+        top_genres = [
+            {"genre": g, "percentage": round((c / total_genre_weight) * 100)}
+            for g, c in genre_counts.most_common(5)
+        ]
+
+        total_aspect_weight = sum(aspect_counts.values()) or 1.0
+        top_aspects = [
+            {"aspect": a, "percentage": round((c / total_aspect_weight) * 100)}
+            for a, c in aspect_counts.most_common(5)
+        ]
+
+        # Determine Taste Archetype
+        dominant_genre = top_genres[0]["genre"].lower() if top_genres else ""
+        dominant_aspect = top_aspects[0]["aspect"] if top_aspects else ""
+        
+        if "science fiction" in dominant_genre or "speculative" in dominant_genre:
+            archetype = "Cosmic World-Builder & Futurist"
+        elif "horror" in dominant_genre or "gothic" in dominant_genre or "dark_atmosphere" in dominant_aspect:
+            archetype = "Atmospheric Dread & Dark Lore Devotee"
+        elif "fantasy" in dominant_genre or "world_building" in dominant_aspect:
+            archetype = "Epic Lore & High Magic Voyager"
+        elif "philosophical" in dominant_aspect or "existential" in dominant_aspect:
+            archetype = "Philosophical & Psychological Inquirer"
+        elif "fast_pacing" in dominant_aspect or "thriller" in dominant_genre:
+            archetype = "High-Tension Propulsive Pacing Seeker"
+        elif "prose_style" in dominant_aspect:
+            archetype = "Lyrical Prose & Narrative Stylist"
+        else:
+            archetype = "Eclectic Literary Connoisseur"
+
+        return {
+            "total_books": len(history),
+            "avg_rating": round(sum(ratings) / len(ratings), 2) if ratings else 0.0,
+            "top_genres": top_genres,
+            "top_aspects": top_aspects,
+            "taste_archetype": archetype
+        }
+
+    def recommend_from_profile(
+        self,
+        history: List[Dict[str, Any]],
+        top_k: int = 12,
+        genre_filter: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Multi-Book Reading History & Taste Profile Recommender.
+        Computes personalized Rocchio preference centroids, aspect attribution,
+        Item2Vec collaborative synthesis, and explainable recommendation attribution.
+        """
+        import time
+        import numpy as np
+        t0 = time.time()
+
+        if not history or self.store.df is None or self.store.embeddings is None:
+            return {"results": [], "taste_dna": self.compute_taste_dna(history), "latency_ms": 0.0}
+
+        df = self.store.df
+        embeddings = self.store.embeddings
+        n_books, dim = embeddings.shape
+
+        history_indices = []
+        history_weights = []
+        history_books = []
+        history_aspect_counts = {}
+
+        ASPECT_KEYWORD_MAP = {
+            "world_building": ["world", "setting", "universe", "planet", "civilization", "empire", "lore", "realm", "magic system", "future", "galaxy"],
+            "philosophical": ["existential", "morality", "philosophy", "consciousness", "human nature", "ethics", "meaning", "reality", "truth", "fate", "death"],
+            "plot_twists": ["twist", "mystery", "conspiracy", "betrayal", "secrets", "revelation", "turn", "suspense", "puzzle", "deception", "shock"],
+            "prose_style": ["lyrical", "prose", "poetic", "literary", "vivid", "dense", "eloquent", "metaphor", "voice", "narrative", "introspective"],
+            "dark_atmosphere": ["dread", "dark", "gothic", "eerie", "haunting", "bleak", "macabre", "chilling", "disturbing", "noir", "shadow", "horror"],
+            "fast_pacing": ["thriller", "propulsive", "action", "pulse", "chase", "tension", "urgent", "fast", "adrenaline", "climax", "danger"],
+            "character_depth": ["character", "psychology", "introspective", "relationships", "emotional", "flawed", "protagonist", "human", "heart", "tragedy"]
+        }
+
+        for item in history:
+            book_id = str(item.get("id", "")).strip()
+            rating = float(item.get("rating", 4.0))
+            aspects = item.get("liked_aspects", [])
+
+            for a in aspects:
+                history_aspect_counts[a] = history_aspect_counts.get(a, 0) + (rating / 5.0)
+
+            # Match in dataframe
+            row_match = df[df["id"].astype(str) == book_id]
+            if not row_match.empty:
+                idx = row_match.index[0]
+                # Centered rating weight alpha: 5->2.5, 4->1.5, 3->0.5, 2->-1.0, 1->-2.5
+                alpha = rating - 2.5
+                history_indices.append(idx)
+                history_weights.append(alpha)
+                history_books.append({
+                    "id": book_id,
+                    "title": str(row_match.iloc[0]["title"]),
+                    "author": str(row_match.iloc[0]["author"]),
+                    "genres": str(row_match.iloc[0]["genres"]),
+                    "rating": rating,
+                    "aspects": aspects,
+                    "vector": embeddings[idx]
+                })
+
+        if not history_indices:
+            return {"results": [], "taste_dna": self.compute_taste_dna(history), "latency_ms": 0.0}
+
+        # 1. Compute Rocchio Preference Centroid Vector
+        pos_vectors = []
+        pos_weights = []
+        neg_vectors = []
+        neg_weights = []
+
+        for idx, w in zip(history_indices, history_weights):
+            if w >= 0:
+                pos_vectors.append(embeddings[idx] * w)
+                pos_weights.append(w)
+            else:
+                neg_vectors.append(embeddings[idx] * abs(w))
+                neg_weights.append(abs(w))
+
+        if pos_vectors:
+            user_centroid = np.sum(pos_vectors, axis=0) / (sum(pos_weights) + 1e-9)
+        else:
+            user_centroid = np.zeros(dim, dtype=np.float32)
+
+        if neg_vectors:
+            neg_centroid = np.sum(neg_vectors, axis=0) / (sum(neg_weights) + 1e-9)
+            user_centroid = user_centroid - 0.4 * neg_centroid
+
+        # Normalize centroid vector
+        norm = np.linalg.norm(user_centroid)
+        if norm > 1e-9:
+            user_centroid = user_centroid / norm
+
+        # 2. Compute Base Semantic Cosine Similarities
+        semantic_scores = np.dot(embeddings, user_centroid)
+
+        # 3. Compute Item2Vec Collaborative Profile Vector
+        collab_scores = np.zeros(n_books, dtype=np.float32)
+        if self.collab and self.collab.has_embeddings():
+            collab_vectors = []
+            collab_weights = []
+            for hb in history_books:
+                if hb["rating"] >= 3.0:
+                    cv = self.collab.get_embedding(hb["id"])
+                    if cv is not None:
+                        collab_vectors.append(cv * (hb["rating"] - 2.0))
+                        collab_weights.append(hb["rating"] - 2.0)
+            
+            if collab_vectors:
+                user_collab_vec = np.sum(collab_vectors, axis=0) / (sum(collab_weights) + 1e-9)
+                user_collab_vec = user_collab_vec / (np.linalg.norm(user_collab_vec) + 1e-9)
+                collab_scores = self.collab.score_all(user_collab_vec)
+
+        # 4. Compute Aspect Alignment Scores across Catalog
+        aspect_boost_scores = np.zeros(n_books, dtype=np.float32)
+        if history_aspect_counts:
+            summaries_genres = (df["summary"].fillna("") + " " + df["genres"].fillna("")).str.lower()
+            for aspect_key, weight in history_aspect_counts.items():
+                kw_list = ASPECT_KEYWORD_MAP.get(aspect_key, [])
+                if kw_list:
+                    # Pattern matching
+                    pattern = "|".join([r"\b" + re.escape(k) + r"\b" for k in kw_list])
+                    matches = summaries_genres.str.contains(pattern, regex=True).astype(np.float32)
+                    aspect_boost_scores += matches.values * (weight * 0.06)
+
+        # 5. Composite Ranking Score
+        composite_scores = (0.65 * semantic_scores) + (0.25 * collab_scores) + aspect_boost_scores
+
+        # 6. Exclude Already-Read History Books
+        for h_idx in history_indices:
+            composite_scores[h_idx] = -999.0
+
+        # Optional Genre Filter
+        if genre_filter:
+            genre_mask = df["genres"].str.contains(genre_filter, case=False, na=False)
+            composite_scores[~genre_mask] = -999.0
+
+        # Get Top-K Indices
+        top_indices = np.argsort(composite_scores)[::-1][:top_k]
+
+        results = []
+        for rank, idx in enumerate(top_indices):
+            score = float(composite_scores[idx])
+            if score <= -900.0:
+                continue
+
+            row = df.iloc[idx]
+            cand_book = {
+                "id": str(row["id"]),
+                "title": str(row["title"]),
+                "author": str(row["author"]),
+                "genres": str(row["genres"]),
+                "pub_date": str(row["pub_date"]),
+                "summary": str(row["summary"]),
+                "similarity_score": round(float(semantic_scores[idx]), 3),
+                "collaborative_affinity": round(float(collab_scores[idx]), 3),
+                "weighted_score": round(min(0.99, max(0.40, (score + 0.15))), 3),
+                "x": float(row["x"]) if "x" in row else 0.0,
+                "y": float(row["y"]) if "y" in row else 0.0
+            }
+
+            # 7. Compute History Attribution (Which historical reads influenced this recommendation most)
+            cand_vec = embeddings[idx]
+            cand_text = (str(row.get("summary", "")) + " " + str(row.get("genres", ""))).lower()
+            
+            influences = []
+            for hb in history_books:
+                if hb["rating"] >= 3.0:
+                    sim = float(np.dot(hb["vector"], cand_vec))
+                    # Find shared aspect highlights
+                    shared_aspects = []
+                    for a in hb["aspects"]:
+                        kw_list = ASPECT_KEYWORD_MAP.get(a, [])
+                        if any(k in cand_text for k in kw_list):
+                            shared_aspects.append(a.replace("_", " ").title())
+
+                    influences.append({
+                        "book_title": hb["title"],
+                        "book_id": hb["id"],
+                        "rating": hb["rating"],
+                        "influence_score": round(sim * (hb["rating"] / 5.0), 3),
+                        "shared_aspects": shared_aspects
+                    })
+
+            # Sort top 2 historical influencers
+            influences.sort(key=lambda x: x["influence_score"], reverse=True)
+            cand_book["top_influences"] = influences[:2]
+
+            # Aspect alignment tags for candidate
+            matched_aspects = []
+            for a_key, kw_list in ASPECT_KEYWORD_MAP.items():
+                if any(k in cand_text for k in kw_list) and a_key in history_aspect_counts:
+                    matched_aspects.append(a_key.replace("_", " ").title())
+            cand_book["matched_aspects"] = matched_aspects[:3]
+
+            # Dynamic enrichments
+            cand_book = self.enricher.bolster_book(cand_book, fetch_online=False)
+            
+            # Match Breakdown sub-meters
+            cand_book["match_breakdown"] = {
+                "plot_pct": int(min(99, max(50, cand_book["similarity_score"] * 100))),
+                "theme_pct": int(min(99, max(55, (cand_book["similarity_score"] * 0.95 + len(matched_aspects) * 0.05) * 100))),
+                "style_pct": int(min(99, max(50, (cand_book["similarity_score"] * 0.92) * 100))),
+                "audience_pct": int(min(99, max(45, (cand_book["collaborative_affinity"] or 0.65) * 100)))
+            }
+
+            results.append(cand_book)
+
+        latency_ms = round((time.time() - t0) * 1000, 1)
+        taste_dna = self.compute_taste_dna(history)
+
+        return {
+            "results": results,
+            "taste_dna": taste_dna,
+            "latency_ms": latency_ms
+        }

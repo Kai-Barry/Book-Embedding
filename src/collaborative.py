@@ -106,6 +106,18 @@ class CollaborativeEngine:
             return self.vectors[idx]
         return None
 
+    def has_embeddings(self) -> bool:
+        return self.vectors is not None and len(self.vectors) > 0
+
+    def get_embedding(self, book_id: str) -> Optional[np.ndarray]:
+        return self.get_collaborative_vector(book_id)
+
+    def score_all(self, query_vec: np.ndarray) -> np.ndarray:
+        if self.vectors is None:
+            return np.zeros(0, dtype=np.float32)
+        scores = np.dot(self.vectors, query_vec)
+        return (scores + 1.0) / 2.0 * 0.55 + 0.40
+
     def get_collaborative_scores(self, target_id: str, candidate_ids: List[str]) -> np.ndarray:
         """
         Computes dot-product cosine similarity in the collaborative taste space
@@ -129,3 +141,4 @@ class CollaborativeEngine:
 
 # Global instance
 collaborative_engine = CollaborativeEngine()
+

@@ -1980,3 +1980,607 @@ function escapeHtml(text) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
+
+/* ==========================================================================
+   MULTI-BOOK READING HISTORY & TASTE PROFILE SYNTHESIZER
+   ========================================================================== */
+
+let currentAppMode = 'anchor'; // 'anchor' or 'profile'
+let profileHistory = [];
+let profileAutocompleteResults = [];
+let profileActiveIndex = -1;
+
+const PROFILE_ASPECTS = [
+  { id: 'world_building', label: 'World-Building', icon: 'orbit' },
+  { id: 'philosophical', label: 'Philosophy & Mind', icon: 'brain' },
+  { id: 'plot_twists', label: 'Plot Twists', icon: 'sparkles' },
+  { id: 'prose_style', label: 'Lyrical Prose', icon: 'feather' },
+  { id: 'dark_atmosphere', label: 'Dark Atmosphere', icon: 'flame' },
+  { id: 'fast_pacing', label: 'Fast Pacing', icon: 'zap' },
+  { id: 'character_depth', label: 'Character Drama', icon: 'users' }
+];
+
+const STARTER_PROFILES = {
+  scifi: [
+    { title: "Dune", rating: 5, aspects: ["world_building", "philosophical"] },
+    { title: "The Three-Body Problem", rating: 5, aspects: ["world_building", "plot_twists"] },
+    { title: "Solaris", rating: 4, aspects: ["philosophical", "dark_atmosphere"] }
+  ],
+  gothic: [
+    { title: "Frankenstein", rating: 5, aspects: ["philosophical", "dark_atmosphere"] },
+    { title: "Dracula", rating: 4, aspects: ["dark_atmosphere", "plot_twists"] },
+    { title: "The Picture of Dorian Gray", rating: 5, aspects: ["prose_style", "philosophical"] }
+  ],
+  fantasy: [
+    { title: "The Fellowship of the Ring", rating: 5, aspects: ["world_building", "prose_style"] },
+    { title: "The Name of the Wind", rating: 5, aspects: ["prose_style", "character_depth"] },
+    { title: "A Game of Thrones", rating: 4, aspects: ["plot_twists", "character_depth"] }
+  ],
+  thriller: [
+    { title: "Gone Girl", rating: 5, aspects: ["plot_twists", "character_depth"] },
+    { title: "Shutter Island", rating: 5, aspects: ["plot_twists", "dark_atmosphere"] },
+    { title: "Dark Matter", rating: 4, aspects: ["fast_pacing", "plot_twists"] }
+  ]
+};
+
+function switchAppMode(mode) {
+  currentAppMode = mode;
+  const anchorBtn = document.getElementById('mode-anchor-btn');
+  const profileBtn = document.getElementById('mode-profile-btn');
+  const anchorContainer = document.getElementById('anchor-mode-container');
+  const profileContainer = document.getElementById('profile-mode-container');
+
+  if (mode === 'profile') {
+    anchorBtn.classList.remove('active');
+    profileBtn.classList.add('active');
+    anchorContainer.style.display = 'none';
+    profileContainer.style.display = 'block';
+
+    if (profileHistory.length === 0) {
+      loadStarterProfile('scifi');
+    } else {
+      renderBookshelf();
+    }
+  } else {
+    profileBtn.classList.remove('active');
+    anchorBtn.classList.add('active');
+    profileContainer.style.display = 'none';
+    anchorContainer.style.display = 'block';
+  }
+}
+
+async function loadStarterProfile(presetKey) {
+  const presetItems = STARTER_PROFILES[presetKey];
+  if (!presetItems) return;
+
+  profileHistory = [];
+  for (const item of presetItems) {
+    try {
+      const res = await fetch(`/api/catalog?q=${encodeURIComponent(item.title)}&limit=1`);
+      const data = await res.json();
+      if (data && data.length > 0) {
+        const book = data[0];
+        profileHistory.push({
+          id: String(book.id),
+          title: book.title,
+          author: book.author,
+          genres: book.genres,
+          pub_date: book.pub_date,
+          rating: item.rating,
+          liked_aspects: [...item.aspects]
+        });
+      }
+    } catch (e) {
+      console.warn("Failed loading starter book:", e);
+    }
+  }
+
+  renderBookshelf();
+  synthesizeProfileRecommendations();
+}
+
+async function handleProfileAutocomplete(val) {
+  const query = val.trim();
+  const listEl = document.getElementById('profile-autocomplete-list');
+  profileActiveIndex = -1;
+
+  if (query.length < 2) {
+    listEl.style.display = 'none';
+    listEl.innerHTML = '';
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/catalog?q=${encodeURIComponent(query)}&limit=8`);
+    profileAutocompleteResults = await res.json();
+
+    if (profileAutocompleteResults.length === 0) {
+      listEl.style.display = 'none';
+      return;
+    }
+
+    listEl.innerHTML = profileAutocompleteResults.map((book, idx) => `
+      <div class="autocomplete-item" onclick="selectProfileBook(${idx})">
+        <div>
+          <div class="autocomplete-title">${escapeHtml(book.title)}</div>
+          <div class="autocomplete-author">by ${escapeHtml(book.author || 'Unknown')} &bull; ${escapeHtml(book.pub_date || '')}</div>
+        </div>
+        <span class="genre-tag" style="font-size: 0.72rem;">${escapeHtml((book.genres || '').split(',')[0])}</span>
+      </div>
+    `).join('');
+
+    listEl.style.display = 'block';
+  } catch (err) {
+    console.error("Profile autocomplete error:", err);
+  }
+}
+
+function handleProfileAutocompleteKeydown(e) {
+  const listEl = document.getElementById('profile-autocomplete-list');
+  const items = listEl.getElementsByClassName('autocomplete-item');
+  if (!items.length || listEl.style.display === 'none') return;
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    profileActiveIndex = (profileActiveIndex + 1) % items.length;
+    updateProfileAutocompleteHighlight(items);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    profileActiveIndex = (profileActiveIndex - 1 + items.length) % items.length;
+    updateProfileAutocompleteHighlight(items);
+  } else if (e.key === 'Enter' && profileActiveIndex >= 0) {
+    e.preventDefault();
+    selectProfileBook(profileActiveIndex);
+  }
+}
+
+function updateProfileAutocompleteHighlight(items) {
+  for (let i = 0; i < items.length; i++) {
+    items[i].style.background = (i === profileActiveIndex) ? 'rgba(229, 169, 60, 0.2)' : '';
+  }
+}
+
+function selectProfileBook(idx) {
+  const book = profileAutocompleteResults[idx];
+  if (!book) return;
+  document.getElementById('profile-search-input').value = book.title;
+  document.getElementById('profile-autocomplete-list').style.display = 'none';
+  addBookToHistory(book);
+  document.getElementById('profile-search-input').value = '';
+}
+
+async function handleProfileBookAdd() {
+  const inputVal = document.getElementById('profile-search-input').value.trim();
+  if (!inputVal) return;
+
+  try {
+    const res = await fetch(`/api/catalog?q=${encodeURIComponent(inputVal)}&limit=1`);
+    const data = await res.json();
+    if (data && data.length > 0) {
+      addBookToHistory(data[0]);
+      document.getElementById('profile-search-input').value = '';
+      document.getElementById('profile-autocomplete-list').style.display = 'none';
+    }
+  } catch (e) {
+    console.error("Failed to add book:", e);
+  }
+}
+
+function addBookToHistory(book) {
+  const exists = profileHistory.some(b => String(b.id) === String(book.id) || b.title.toLowerCase() === book.title.toLowerCase());
+  if (exists) return;
+
+  profileHistory.unshift({
+    id: String(book.id),
+    title: book.title,
+    author: book.author,
+    genres: book.genres,
+    pub_date: book.pub_date,
+    rating: 5,
+    liked_aspects: ['world_building', 'philosophical']
+  });
+
+  renderBookshelf();
+}
+
+function setHistoryRating(idx, rating) {
+  if (profileHistory[idx]) {
+    profileHistory[idx].rating = rating;
+    renderBookshelf();
+  }
+}
+
+function toggleHistoryAspect(idx, aspectId) {
+  const item = profileHistory[idx];
+  if (!item) return;
+
+  if (item.liked_aspects.includes(aspectId)) {
+    item.liked_aspects = item.liked_aspects.filter(a => a !== aspectId);
+  } else {
+    if (item.liked_aspects.length >= 2) {
+      item.liked_aspects.shift(); // keep max 2 highlights
+    }
+    item.liked_aspects.push(aspectId);
+  }
+  renderBookshelf();
+}
+
+function removeFromProfileHistory(idx) {
+  profileHistory.splice(idx, 1);
+  renderBookshelf();
+}
+
+function clearProfileHistory() {
+  profileHistory = [];
+  renderBookshelf();
+  document.getElementById('profile-results-section').style.display = 'none';
+}
+
+function renderBookshelf() {
+  const container = document.getElementById('profile-bookshelf-grid');
+  const countEl = document.getElementById('shelf-count');
+  countEl.textContent = profileHistory.length;
+
+  if (profileHistory.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 2.5rem; background: rgba(0,0,0,0.25); border-radius: var(--radius-md); border: 1px dashed var(--border-subtle);">
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">Your reading bookshelf is empty. Search and add books above, or pick one of the Instant Starter Shelves!</p>
+      </div>
+    `;
+    renderTasteDNADashboard({
+      total_books: 0,
+      avg_rating: 0.0,
+      top_genres: [],
+      top_aspects: [],
+      taste_archetype: "Awaiting Literature"
+    });
+    return;
+  }
+
+  container.innerHTML = profileHistory.map((item, idx) => {
+    // Star rating buttons
+    const starsHtml = [1, 2, 3, 4, 5].map(starVal => {
+      const activeClass = starVal <= item.rating ? 'active-star' : '';
+      return `<button class="star-btn ${activeClass}" onclick="setHistoryRating(${idx}, ${starVal})" title="Rank ${starVal} Stars">★</button>`;
+    }).join('');
+
+    const ratingLabel = item.rating === 5 ? 'Loved (Strongest Weight)' :
+                        item.rating === 4 ? 'Liked' :
+                        item.rating === 3 ? 'Neutral' :
+                        item.rating === 2 ? 'Disliked (Deprioritize)' : 'Hated (Exclude Traits)';
+
+    // Aspect buttons
+    const aspectsHtml = PROFILE_ASPECTS.map(asp => {
+      const isSelected = item.liked_aspects.includes(asp.id);
+      const activeClass = isSelected ? 'active' : '';
+      return `
+        <span class="aspect-choice-pill ${activeClass}" onclick="toggleHistoryAspect(${idx}, '${asp.id}')">
+          ${renderIcon(asp.icon)} ${asp.label}
+        </span>
+      `;
+    }).join('');
+
+    return `
+      <div class="bookshelf-card">
+        <div class="shelf-card-header">
+          <div>
+            <h4 class="shelf-book-title">${escapeHtml(item.title)}</h4>
+            <div class="shelf-book-author">by ${escapeHtml(item.author || 'Unknown')}</div>
+          </div>
+          <button class="shelf-remove-btn" onclick="removeFromProfileHistory(${idx})" title="Remove from Shelf">✕</button>
+        </div>
+
+        <div>
+          <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.25rem;">
+            Your Rating:
+          </div>
+          <div class="star-rating-group">
+            ${starsHtml}
+            <span class="rating-label-text">${item.rating}★ (${ratingLabel})</span>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.35rem;">
+            Key Highlight Qualities (Pick 1–2):
+          </div>
+          <div class="aspect-choice-strip">
+            ${aspectsHtml}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Live client-side preview of Taste DNA
+  updateTasteDNADashboardClient();
+}
+
+function updateTasteDNADashboardClient() {
+  const genreCounts = {};
+  const aspectCounts = {};
+  let ratingSum = 0;
+
+  profileHistory.forEach(item => {
+    ratingSum += item.rating;
+    item.liked_aspects.forEach(a => {
+      aspectCounts[a] = (aspectCounts[a] || 0) + (item.rating / 5.0);
+    });
+    if (item.genres) {
+      item.genres.split(',').forEach(g => {
+        const clean = g.trim();
+        if (clean && clean !== 'General') {
+          genreCounts[clean] = (genreCounts[clean] || 0) + (item.rating - 1.0);
+        }
+      });
+    }
+  });
+
+  const sortedGenres = Object.entries(genreCounts).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  const totalGenreW = sortedGenres.reduce((acc, curr) => acc + curr[1], 0) || 1;
+  const topGenres = sortedGenres.map(([genre, count]) => ({
+    genre,
+    percentage: Math.round((count / totalGenreW) * 100)
+  }));
+
+  const sortedAspects = Object.entries(aspectCounts).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  const totalAspectW = sortedAspects.reduce((acc, curr) => acc + curr[1], 0) || 1;
+  const topAspects = sortedAspects.map(([aspect, count]) => ({
+    aspect,
+    percentage: Math.round((count / totalAspectW) * 100)
+  }));
+
+  let archetype = "Eclectic Literary Connoisseur";
+  const dominantGenre = (topGenres[0]?.genre || '').toLowerCase();
+  const dominantAspect = topAspects[0]?.aspect || '';
+
+  if (dominantGenre.includes('science fiction') || dominantGenre.includes('speculative')) {
+    archetype = "Cosmic World-Builder & Futurist";
+  } else if (dominantGenre.includes('horror') || dominantGenre.includes('gothic') || dominantAspect.includes('dark_atmosphere')) {
+    archetype = "Atmospheric Dread & Dark Lore Devotee";
+  } else if (dominantGenre.includes('fantasy') || dominantAspect.includes('world_building')) {
+    archetype = "Epic Lore & High Magic Voyager";
+  } else if (dominantAspect.includes('philosophical')) {
+    archetype = "Philosophical & Psychological Inquirer";
+  } else if (dominantAspect.includes('fast_pacing') || dominantGenre.includes('thriller')) {
+    archetype = "High-Tension Propulsive Pacing Seeker";
+  } else if (dominantAspect.includes('prose_style')) {
+    archetype = "Lyrical Prose & Narrative Stylist";
+  }
+
+  renderTasteDNADashboard({
+    total_books: profileHistory.length,
+    avg_rating: (ratingSum / (profileHistory.length || 1)).toFixed(1),
+    top_genres: topGenres,
+    top_aspects: topAspects,
+    taste_archetype: archetype
+  });
+}
+
+function renderTasteDNADashboard(tasteDna) {
+  const dashEl = document.getElementById('taste-dna-dashboard');
+  if (!dashEl) return;
+
+  const genreBarsHtml = (tasteDna.top_genres || []).map(g => `
+    <div class="dna-bar-row">
+      <span class="dna-bar-name" title="${escapeHtml(g.genre)}">${escapeHtml(g.genre)}</span>
+      <div class="dna-bar-track">
+        <div class="dna-bar-fill fill-theme" style="width: ${g.percentage}%;"></div>
+      </div>
+      <span class="dna-bar-val">${g.percentage}%</span>
+    </div>
+  `).join('') || '<div style="color: var(--text-muted); font-size: 0.76rem;">Add books to compute genre spectrum</div>';
+
+  const aspectPillsHtml = (tasteDna.top_aspects || []).map(a => {
+    const aspObj = PROFILE_ASPECTS.find(p => p.id === a.aspect) || { label: a.aspect.replace('_', ' '), icon: 'sparkles' };
+    return `
+      <span class="dna-aspect-pill">
+        <span>${renderIcon(aspObj.icon)} ${aspObj.label}</span>
+        <strong style="color: var(--accent-gold); margin-left: 0.4rem;">${a.percentage}%</strong>
+      </span>
+    `;
+  }).join('') || '<div style="color: var(--text-muted); font-size: 0.76rem;">Select aspect highlights per book</div>';
+
+  dashEl.innerHTML = `
+    <div class="dna-archetype-box">
+      <div class="dna-archetype-label">${renderIcon('orbit')} Synthesized Taste DNA</div>
+      <h3 class="dna-archetype-title">${escapeHtml(tasteDna.taste_archetype)}</h3>
+      <div class="dna-stats-mini">${tasteDna.total_books} Books Curated &bull; Avg Rating ${tasteDna.avg_rating}★</div>
+    </div>
+
+    <div>
+      <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.45rem;">
+        Dominant Genre Spectrum:
+      </div>
+      <div class="dna-bars-grid">
+        ${genreBarsHtml}
+      </div>
+    </div>
+
+    <div>
+      <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.45rem;">
+        Preferred Narrative Qualities:
+      </div>
+      <div class="dna-aspects-cluster">
+        ${aspectPillsHtml}
+      </div>
+    </div>
+  `;
+}
+
+async function synthesizeProfileRecommendations() {
+  if (profileHistory.length === 0) {
+    alert("Please add at least one book to your reading bookshelf.");
+    return;
+  }
+
+  const topK = parseInt(document.getElementById('profile-topk-select')?.value || 12);
+  const btn = document.getElementById('btn-synthesize-profile');
+  const resultsSection = document.getElementById('profile-results-section');
+  const countEl = document.getElementById('profile-results-count');
+  const latencyEl = document.getElementById('profile-latency-tag');
+  const gridEl = document.getElementById('profile-books-grid');
+
+  btn.innerHTML = `${renderIcon('zap')} Synthesizing Vector Profile...`;
+  resultsSection.style.display = 'block';
+  gridEl.innerHTML = `<div class="loading-state" style="grid-column: 1 / -1;"><div class="spinner"></div><p>Calculating Rocchio Centroid & Collaborative Affinity across 25,101 books...</p></div>`;
+
+  try {
+    const payload = {
+      history: profileHistory.map(item => ({
+        id: item.id,
+        rating: item.rating,
+        liked_aspects: item.liked_aspects
+      })),
+      top_k: topK
+    };
+
+    const res = await fetch('/api/recommend/profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) throw new Error("Failed to synthesize recommendations");
+
+    const data = await res.json();
+    renderTasteDNADashboard(data.taste_dna);
+    renderProfileResults(data.results, data.latency_ms);
+
+    countEl.textContent = `Profile Recommendations (${data.results.length})`;
+    latencyEl.innerHTML = `${renderIcon('zap')} Multi-Vector Profile Inference: <strong>${data.latency_ms} ms</strong>`;
+
+    resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (err) {
+    console.error("Profile recommendation failed:", err);
+    gridEl.innerHTML = `<div style="grid-column: 1 / -1; color: #f43f5e; text-align: center;">Synthesis failed: ${escapeHtml(err.message)}</div>`;
+  } finally {
+    btn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+      <span>Synthesize Multi-Book Recommendations ➔</span>
+    `;
+  }
+}
+
+function renderProfileResults(books, latency) {
+  const container = document.getElementById('profile-books-grid');
+  container.innerHTML = '';
+
+  if (!books || books.length === 0) {
+    container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">No matching recommendations found for this reading profile.</div>`;
+    return;
+  }
+
+  books.forEach(b => {
+    const card = document.createElement('div');
+    card.className = 'book-card';
+
+    const simPercent = b.weighted_score !== undefined ? Math.round(b.weighted_score * 100) : null;
+    const genres = (b.genres || '').split(',').map(g => g.trim()).filter(g => g && g !== 'General').slice(0, 3);
+    const genresHtml = genres.map(g => `<span class="genre-tag">${escapeHtml(g)}</span>`).join('');
+
+    const pop = b.popularity || { tier: 'Acclaimed Read', icon: '✨', label: 'Acclaimed Read' };
+    const ratingVal = b.rating ? parseFloat(b.rating).toFixed(2) : '4.10';
+    const reviewsCount = b.ratings_count ? b.ratings_count.toLocaleString() : '1,250';
+
+    // Influence Attribution Box
+    let influenceHtml = '';
+    if (b.top_influences && b.top_influences.length > 0) {
+      const chips = b.top_influences.map(inf => `
+        <span class="influence-chip">
+          <strong>${escapeHtml(inf.book_title)}</strong> (${inf.rating}★)
+          ${inf.shared_aspects && inf.shared_aspects.length > 0 ? `&bull; ${inf.shared_aspects.join(', ')}` : ''}
+        </span>
+      `).join('');
+
+      influenceHtml = `
+        <div class="profile-influence-box">
+          <div class="influence-header">
+            ${renderIcon('sparkles')} Historical Taste Resonance:
+          </div>
+          <div class="influence-chips-row">
+            ${chips}
+          </div>
+        </div>
+      `;
+    }
+
+    // Matched aspects badges
+    const matchedAspectsHtml = (b.matched_aspects || []).map(a => `
+      <span class="dna-pill" style="border-color: rgba(229, 169, 60, 0.4); color: var(--text-gold);">
+        ${renderIcon('sparkles')} ${escapeHtml(a)}
+      </span>
+    `).join('');
+
+    // Vector Breakdown
+    const breakdown = b.match_breakdown || { plot_pct: 85, theme_pct: 82, style_pct: 80, audience_pct: 75 };
+    const breakdownHtml = `
+      <div class="match-breakdown-card">
+        <div class="match-breakdown-header">
+          <span>${renderIcon('sliders')} Profile Alignment Vectors</span>
+          <span style="color: var(--accent-gold);">${simPercent}% Overall</span>
+        </div>
+        <div class="breakdown-bars-grid">
+          <div class="breakdown-bar-item">
+            <div class="breakdown-bar-label"><span>${renderIcon('book-open')} Narrative Plot</span><span>${breakdown.plot_pct}%</span></div>
+            <div class="breakdown-bar-track"><div class="breakdown-bar-fill fill-plot" style="width: ${breakdown.plot_pct}%;"></div></div>
+          </div>
+          <div class="breakdown-bar-item">
+            <div class="breakdown-bar-label"><span>${renderIcon('sparkles')} Thematic Depth</span><span>${breakdown.theme_pct}%</span></div>
+            <div class="breakdown-bar-track"><div class="breakdown-bar-fill fill-theme" style="width: ${breakdown.theme_pct}%;"></div></div>
+          </div>
+          <div class="breakdown-bar-item">
+            <div class="breakdown-bar-label"><span>${renderIcon('target')} Style & Voice</span><span>${breakdown.style_pct}%</span></div>
+            <div class="breakdown-bar-track"><div class="breakdown-bar-fill fill-style" style="width: ${breakdown.style_pct}%;"></div></div>
+          </div>
+          <div class="breakdown-bar-item">
+            <div class="breakdown-bar-label"><span>${renderIcon('users')} Reader Affinity</span><span>${breakdown.audience_pct}%</span></div>
+            <div class="breakdown-bar-track"><div class="breakdown-bar-fill fill-audience" style="width: ${breakdown.audience_pct}%;"></div></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    card.innerHTML = `
+      <div>
+        <div class="card-top">
+          <div>
+            <h3 class="book-title" style="cursor: pointer;" onclick="openBookModal('${escapeHtml(b.id)}')">${escapeHtml(b.title)}</h3>
+            <div class="book-author">by <strong style="color: #cbd5e1;">${escapeHtml(b.author || 'Unknown')}</strong> &bull; <span style="color: var(--text-muted); font-size: 0.8rem;">${escapeHtml(b.pub_date || '')}</span></div>
+          </div>
+          ${simPercent !== null ? `<div class="sim-score-badge">${simPercent}% Profile Match</div>` : ''}
+        </div>
+
+        <div class="book-metadata-row" style="margin-bottom: 0.6rem;">
+          <span class="rating-badge" title="${reviewsCount} reader ratings">
+            ${renderIcon('star', 'gold-star')} ${ratingVal}★ <span style="opacity: 0.65; font-size: 0.72rem;">(${reviewsCount})</span>
+          </span>
+          <span class="popularity-badge">${renderIcon('flame', 'flame-icon')} ${escapeHtml(pop.tier)}</span>
+        </div>
+
+        ${influenceHtml}
+        ${breakdownHtml}
+
+        <div class="narrative-dna-strip" style="margin-top: 0.5rem;">
+          ${matchedAspectsHtml}
+        </div>
+
+        <div class="genre-tags">${genresHtml}</div>
+        <p class="book-summary" title="${escapeHtml(b.summary)}" style="cursor: pointer;" onclick="openBookModal('${escapeHtml(b.id)}')">${escapeHtml(b.summary)}</p>
+      </div>
+
+      <div class="card-footer" style="margin-top: 1rem;">
+        <button class="action-btn action-btn-subtle" onclick="openBookModal('${escapeHtml(b.id)}')">
+          ${renderIcon('bar-chart')} Deep Analysis
+        </button>
+        <button class="btn-similar" onclick="addBookToHistory({id: '${escapeHtml(b.id)}', title: '${escapeHtml(b.title).replace(/'/g, "\\'")}', author: '${escapeHtml(b.author || '').replace(/'/g, "\\'")}', genres: '${escapeHtml(b.genres || '').replace(/'/g, "\\'")}'})">
+          <span>Add to Bookshelf</span>
+          ${renderIcon('plus')}
+        </button>
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+}
+

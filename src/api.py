@@ -248,3 +248,31 @@ async def bolster_single_book(book_id: str):
     if not details:
         raise HTTPException(status_code=404, detail="Book not found")
     return {"status": "success", "book": details}
+
+class HistoryItem(BaseModel):
+    id: str
+    rating: float = 4.0
+    liked_aspects: List[str] = []
+
+class ProfileRecommendRequest(BaseModel):
+    history: List[HistoryItem]
+    top_k: int = 12
+    genre_filter: Optional[str] = None
+
+@app.post("/api/recommend/profile")
+async def recommend_from_reading_profile(payload: ProfileRecommendRequest):
+    """
+    Multi-Book Reading History & Taste DNA Recommender.
+    Computes Rocchio preference centroid, aspect attribution, and collaborative affinity.
+    """
+    if not recommender:
+        raise HTTPException(status_code=503, detail="Recommender service not ready")
+    
+    history_dicts = [item.dict() for item in payload.history]
+    res = recommender.recommend_from_profile(
+        history=history_dicts,
+        top_k=payload.top_k,
+        genre_filter=payload.genre_filter
+    )
+    return res
+
