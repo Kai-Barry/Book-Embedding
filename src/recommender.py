@@ -557,6 +557,13 @@ class BookRecommender:
 
             # Find matching row in catalog
             row_match = df[df["id"].astype(str) == book_id]
+            if row_match.empty and item.get("title"):
+                b_title = str(item["title"]).lower().strip()
+                row_match = df[df["title"].str.lower() == b_title]
+            if row_match.empty and item.get("title"):
+                b_title = str(item["title"]).lower().strip()
+                row_match = df[df["title"].str.lower().str.contains(re.escape(b_title), na=False)]
+
             if not row_match.empty:
                 row = row_match.iloc[0]
                 book_genres = [g.strip() for g in str(row.get("genres", "")).split(",") if g.strip() and g.strip() != "General"]
@@ -647,16 +654,28 @@ class BookRecommender:
             for a in aspects:
                 history_aspect_counts[a] = history_aspect_counts.get(a, 0) + (rating / 5.0)
 
-            # Match in dataframe
+            # Match in dataframe by ID or Title fallback
             row_match = df[df["id"].astype(str) == book_id]
+            if row_match.empty and item.get("title"):
+                b_title = str(item["title"]).lower().strip()
+                row_match = df[df["title"].str.lower() == b_title]
+            if row_match.empty and item.get("title"):
+                b_title = str(item["title"]).lower().strip()
+                row_match = df[df["title"].str.lower().str.contains(re.escape(b_title), na=False)]
+
             if not row_match.empty:
-                idx = row_match.index[0]
+                idx = df.index.get_loc(row_match.index[0])
+                if isinstance(idx, slice):
+                    idx = idx.start
+                elif isinstance(idx, np.ndarray):
+                    idx = int(idx[0])
+                
                 # Centered rating weight alpha: 5->2.5, 4->1.5, 3->0.5, 2->-1.0, 1->-2.5
                 alpha = rating - 2.5
                 history_indices.append(idx)
                 history_weights.append(alpha)
                 history_books.append({
-                    "id": book_id,
+                    "id": str(row_match.iloc[0]["id"]),
                     "title": str(row_match.iloc[0]["title"]),
                     "author": str(row_match.iloc[0]["author"]),
                     "genres": str(row_match.iloc[0]["genres"]),
