@@ -257,13 +257,26 @@ class BookRecommender:
         
         matches = []
         if self.store.df is not None:
-            matches = self.store.df.index[
-                (self.store.df["id"] == book_id_or_title) | 
-                (self.store.df["title"].str.lower() == book_id_or_title.lower())
-            ].tolist()
+            df = self.store.df
+            # 1. Match by exact ID
+            matches = df.index[df["id"].astype(str) == str(book_id_or_title)].tolist()
+            # 2. Match by exact title
+            if not matches:
+                matches = df.index[df["title"].str.lower() == str(book_id_or_title).lower()].tolist()
+            # 3. Match by partial / substring title
+            if not matches:
+                matches = df.index[df["title"].str.lower().str.contains(re.escape(str(book_id_or_title).lower()), na=False)].tolist()
 
         if not matches or self.store.embeddings is None:
-            raise ValueError(f"Book '{book_id_or_title}' not found in database.")
+            # Check if dynamic online book exists
+            from src.data_loader import BookDataLoader
+            online_book = BookDataLoader.fetch_online_book(book_id_or_title)
+            if online_book:
+                alt_matches = self.store.df.index[self.store.df["title"].str.lower().str.contains(re.escape(online_book["title"].lower()), na=False)].tolist()
+                if alt_matches:
+                    matches = alt_matches
+            if not matches:
+                raise ValueError(f"Book '{book_id_or_title}' not found in database.")
 
         book_idx = matches[0]
         base_vector = self.store.embeddings[book_idx]
@@ -507,7 +520,7 @@ class BookRecommender:
             })
 
         # Dynamic OpenLibrary fetch if no results
-        if len(results) < 2:
+        if len(results) == 0:
             from src.data_loader import BookDataLoader
             online_book = BookDataLoader.fetch_online_book(query)
             if online_book:

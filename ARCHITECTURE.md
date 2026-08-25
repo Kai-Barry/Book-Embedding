@@ -76,3 +76,19 @@ When anchor literature lacks synopsis depth or ratings:
 - **Backend**: Python 3.10+, PyTorch (CUDA), FastAPI, Uvicorn, NumPy, Pandas, PyArrow/Parquet, UMAP-Learn, Transformers.
 - **Frontend**: HTML5, Vanilla CSS3 (Custom Design Tokens), ES6+ JavaScript, Lucide Vector Icons, HTML5 Canvas 2D.
 - **Deployment**: Docker, Docker Compose, Unraid XML Template.
+
+---
+
+## 🧪 6. Testing & Quality Assurance Architecture
+
+The codebase includes an automated modular test suite covering all critical layers:
+
+| Test Module | Coverage Scope |
+| :--- | :--- |
+| `test_vector_store.py` | Index persistence, L2 normalization, and cosine nearest neighbor math. |
+| `test_collaborative.py` | Item2Vec matrix shape, unit vectors, and global score blending. |
+| `test_style_extractor.py` | POV heuristic classification, story velocity meters, and atmospheric mood extraction. |
+| `test_data_enricher.py` | Book series regex parsing, popularity tier scoring, and in-memory bolstering. |
+| `test_recommender.py` | Multi-vector weighting, motif boosting/exclusion, Rocchio profile centroids, and attribution. |
+| `test_api.py` | FastAPI endpoint contracts (`/api/status`, `/api/catalog`, `/api/similar`, `/api/recommend/profile`). |
+

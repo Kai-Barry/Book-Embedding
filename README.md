@@ -77,9 +77,16 @@ docker-compose up -d --build
 - `GET /api/book/{id}` — Full metadata, style profile, and thematic subclusters.
 - `GET /api/similar/{id}` — Multi-weighted cosine vector similarity search.
 - `POST /api/bolster/{id}` — Live web data enrichment via OpenLibrary/Google Books.
-- `GET /api/galaxy` — 2D spatial coordinate array for constellation canvas.
+## 🧪 Automated Testing
+
+Execute the comprehensive test suite across vector math, collaborative filtering, style extraction, profile recommendations, and API endpoints:
+
+```bash
+python -m unittest discover -s tests -v
+```
 
 ---
 
 ## 📜 Architecture & Design
 For details on vector decomposition mathematics, Item2Vec co-occurrence modeling, and spatial indexing, see [ARCHITECTURE.md](ARCHITECTURE.md).
+

@@ -25,7 +25,7 @@ app.add_middleware(
 # Global State
 vector_store = BookVectorStore()
 embedder = None
-recommender = None
+recommender = BookRecommender(vector_store, None)
 
 @app.on_event("startup")
 async def startup_event():
@@ -34,10 +34,10 @@ async def startup_event():
     try:
         embedder = get_embedder(provider="local")
         recommender = BookRecommender(vector_store, embedder)
-        print("[API] Successfully initialized Recommender.")
+        print("[API] Successfully initialized Recommender with embedder.")
     except Exception as e:
         print(f"[API Warning] Embedder could not be loaded at startup: {e}")
-        recommender = BookRecommender(vector_store, None)
+
 
 # Serve Web UI Static Files
 app.mount("/static", StaticFiles(directory=str(WEB_DIR)), name="static")
@@ -250,7 +250,8 @@ async def bolster_single_book(book_id: str):
     return {"status": "success", "book": details}
 
 class HistoryItem(BaseModel):
-    id: str
+    id: Optional[str] = None
+    title: Optional[str] = None
     rating: float = 4.0
     liked_aspects: List[str] = []
 
@@ -268,7 +269,7 @@ async def recommend_from_reading_profile(payload: ProfileRecommendRequest):
     if not recommender:
         raise HTTPException(status_code=503, detail="Recommender service not ready")
     
-    history_dicts = [item.dict() for item in payload.history]
+    history_dicts = [item.model_dump() if hasattr(item, 'model_dump') else item.dict() for item in payload.history]
     res = recommender.recommend_from_profile(
         history=history_dicts,
         top_k=payload.top_k,
