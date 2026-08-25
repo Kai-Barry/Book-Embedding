@@ -25,3 +25,5 @@ data/vector_db/
 .idea/
 .DS_Store
 Thumbs.db
+scratch/
+

@@ -158,16 +158,23 @@ async def get_similar_books(
     top_k: int = 12, 
     genre: Optional[str] = None,
     weight_plot: float = 1.0,
-    weight_tone: float = 0.7,
-    weight_style: float = 0.5,
-    weight_pacing: float = 0.4,
+    weight_tone: float = 1.0,
+    weight_style: float = 1.0,
+    weight_pacing: float = 1.0,
+    weight_motifs: float = 1.0,
+    weight_community: float = 1.0,
+    boost_keywords: Optional[str] = None,
+    exclude_keywords: Optional[str] = None,
     keywords: Optional[str] = None
 ):
     if not recommender:
         raise HTTPException(status_code=503, detail="Recommender service not ready")
     
     t0 = time.perf_counter()
-    active_kw_list = [k.strip() for k in keywords.split(",") if k.strip()] if keywords else None
+    boost_list = [k.strip() for k in boost_keywords.split(",") if k.strip()] if boost_keywords else None
+    if boost_list is None and keywords:
+        boost_list = [k.strip() for k in keywords.split(",") if k.strip()]
+    exclude_list = [k.strip() for k in exclude_keywords.split(",") if k.strip()] if exclude_keywords else None
     
     try:
         rec_data = recommender.recommend_similar_to_book(
@@ -178,7 +185,10 @@ async def get_similar_books(
             weight_tone=weight_tone,
             weight_style=weight_style,
             weight_pacing=weight_pacing,
-            active_keywords=active_kw_list
+            weight_motifs=weight_motifs,
+            weight_community=weight_community,
+            boost_keywords=boost_list,
+            exclude_keywords=exclude_list
         )
     except ValueError:
         # Check if we can dynamically fetch and embed it
@@ -195,7 +205,10 @@ async def get_similar_books(
                 weight_tone=weight_tone,
                 weight_style=weight_style,
                 weight_pacing=weight_pacing,
-                active_keywords=active_kw_list
+                weight_motifs=weight_motifs,
+                weight_community=weight_community,
+                boost_keywords=boost_list,
+                exclude_keywords=exclude_list
             )
         else:
             raise HTTPException(status_code=404, detail=f"Book '{book_id}' not found.")
@@ -203,13 +216,35 @@ async def get_similar_books(
     duration_ms = (time.perf_counter() - t0) * 1000.0
     results = rec_data.get("results", [])
     target_book = rec_data.get("target_book", None)
+    subclustered_motifs = rec_data.get("subclustered_motifs", {})
     concept_keywords = rec_data.get("concept_keywords", [])
     
     return {
         "book_id": book_id,
         "target_book": target_book,
+        "subclustered_motifs": subclustered_motifs,
         "concept_keywords": concept_keywords,
         "count": len(results),
         "latency_ms": round(duration_ms, 2),
         "results": results
     }
+
+@app.post("/api/bolster/{book_id}")
+async def bolster_single_book(book_id: str):
+    """Fetches real-time authoritative metadata, ratings, and blurbs from OpenLibrary / Google Books."""
+    if not recommender:
+        raise HTTPException(status_code=503, detail="Recommender service not ready")
+    
+    if recommender.store.df is not None:
+        match = recommender.store.df[
+            (recommender.store.df["id"] == book_id) | 
+            (recommender.store.df["title"].str.lower() == book_id.lower())
+        ]
+        if not match.empty:
+            raw_dict = match.iloc[0].to_dict()
+            recommender.enricher.bolster_book(raw_dict, fetch_online=True)
+
+    details = recommender.get_book_details(book_id)
+    if not details:
+        raise HTTPException(status_code=404, detail="Book not found")
+    return {"status": "success", "book": details}
