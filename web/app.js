@@ -172,9 +172,9 @@ const MOTIF_LEVELS = {
 
 let currentWeights = {
   plot: 4,        // Balanced (1.0x)
-  tone: 3,        // Low (0.7x)
-  style: 3,       // Low (0.7x)
-  pacing: 3,      // Low (0.7x)
+  tone: 4,        // Balanced (1.0x)
+  style: 4,       // Balanced (1.0x)
+  pacing: 4,      // Balanced (1.0x)
   community: 4    // Balanced (1.0x) - Reader Co-Taste & Collaborative Affinity
 };
 let currentSubclusteredMotifs = {};
@@ -525,9 +525,9 @@ function updateMotifPillUI(keyword, state) {
 function resetTuningDefaults() {
   currentWeights = {
     plot: 4,
-    tone: 3,
-    style: 3,
-    pacing: 3,
+    tone: 4,
+    style: 4,
+    pacing: 4,
     community: 4
   };
   motifStates.clear();
@@ -654,15 +654,15 @@ async function openBookModal(bookId) {
           const tagsHtml = tags.map(t => `<span class="concept-pill state-neutral" style="cursor: default; font-size: 0.76rem;">${renderIcon('tag')} ${escapeHtml(t)}</span>`).join('');
           return `
             <div style="margin-bottom: 0.65rem;">
-              <div style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.25rem;">${escapeHtml(cat)}</div>
+              <div style="font-size: 0.75rem; font-weight: 800; color: var(--accent-leather); text-transform: uppercase; margin-bottom: 0.25rem;">${escapeHtml(cat)}</div>
               <div class="concept-pills-row">${tagsHtml}</div>
             </div>
           `;
         }).join('');
 
         subclustersHtml = `
-          <div style="margin-bottom: 1.5rem; background: rgba(0, 0, 0, 0.25); padding: 1.1rem 1.3rem; border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.07);">
-            <h4 style="font-size: 0.82rem; color: #e5a93c; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.7rem; display: flex; align-items: center; gap: 0.4rem;">${renderIcon('sparkles')} Thematic & Stylistic Sub-Clusters</h4>
+          <div class="modal-subclusters-box">
+            <h4 style="font-size: 0.82rem; color: var(--accent-terracotta); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.7rem; display: flex; align-items: center; gap: 0.4rem;">${renderIcon('sparkles')} Thematic & Stylistic Sub-Clusters</h4>
             ${catHtml}
           </div>
         `;
@@ -688,7 +688,7 @@ async function openBookModal(bookId) {
         <div class="modal-visual-breakdown">
           <div class="visual-graph-title">
             <span style="display: flex; align-items: center; gap: 0.4rem;">${renderIcon('bar-chart')} Vector Alignment vs. "${escapeHtml(currentTargetBook.title)}"</span>
-            <span style="margin-left: auto; color: #e5a93c; font-weight: 800; font-family: monospace;">${bd.composite_pct}% Proximity</span>
+            <span style="margin-left: auto; color: var(--accent-terracotta); font-weight: 800; font-family: monospace;">${bd.composite_pct}% Proximity</span>
           </div>
 
           <div class="modal-graph-row">
@@ -734,7 +734,7 @@ async function openBookModal(bookId) {
     }
 
     content.innerHTML = `
-      <div class="modal-hero-layout" style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 1.4rem; margin-bottom: 1.5rem;">
+      <div class="modal-hero-layout">
         <div class="modal-cover-slot">
           ${renderBookCover(book, 'large')}
         </div>
@@ -743,9 +743,9 @@ async function openBookModal(bookId) {
             <span class="spotlight-anchor-tag">${renderIcon('book-open')} Literary Analysis & Decomposition</span>
             ${book.series_info ? `<span class="series-badge">${renderIcon('library')} ${escapeHtml(book.series_info.full_tag)}</span>` : ''}
           </div>
-          <h2 style="font-size: 1.8rem; font-weight: 800; font-family: var(--font-serif); color: #fff; margin: 0.4rem 0 0.2rem 0;">${escapeHtml(book.title)}</h2>
+          <h2 style="font-size: 1.85rem; font-weight: 800; font-family: var(--font-serif); color: var(--accent-leather); margin: 0.4rem 0 0.2rem 0;">${escapeHtml(book.title)}</h2>
           <div style="font-size: 1rem; color: var(--text-secondary);">
-            by <strong style="color: ${pal.foil};">${escapeHtml(book.author || 'Unknown')}</strong> &bull; 
+            by <strong style="color: var(--accent-terracotta);">${escapeHtml(book.author || 'Unknown')}</strong> &bull; 
             <span style="color: var(--text-muted);">${escapeHtml(book.pub_date || 'N/A')}</span>
           </div>
 
@@ -754,7 +754,7 @@ async function openBookModal(bookId) {
             <span class="popularity-badge">${renderIcon(pop.icon || 'sparkles', 'badge-icon')} ${pop.label}</span>
             ${book.readability ? `<span class="readability-badge" title="Flesch Reading Ease score: ${book.readability.score}">${renderIcon('book-open')} ${escapeHtml(book.readability.label)}</span>` : ''}
           </div>
-          <div style="font-size: 0.76rem; color: #94a3b8; margin-top: 0.3rem;">${escapeHtml(pop.description)}</div>
+          <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.35rem;">${escapeHtml(pop.description)}</div>
           <div class="genre-tags" style="margin-top: 0.5rem;">${genresHtml}</div>
         </div>
       </div>
@@ -779,7 +779,7 @@ async function openBookModal(bookId) {
         <div class="style-badge-item">
           <span class="style-badge-label">${renderIcon('feather')} Prose & Writing Craft</span>
           <span class="style-badge-val">${escapeHtml(style.prose_style || style.prose_density || 'Grounded & Narrative')}</span>
-          <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 0.2rem; line-height: 1.3;">
+          <div style="font-size: 0.74rem; color: var(--text-secondary); margin-top: 0.2rem; line-height: 1.3;">
             ${escapeHtml(style.prose_description || 'Clear, immersive storytelling')}
           </div>
         </div>
@@ -793,8 +793,8 @@ async function openBookModal(bookId) {
       ${subclustersHtml}
 
       <div style="margin-bottom: 2rem;">
-        <h4 style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Synopsis & Narrative Excerpt</h4>
-        <p style="font-size: 0.95rem; color: #e2e8f0; line-height: 1.7; background: rgba(0, 0, 0, 0.25); padding: 1.2rem; border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.05); max-height: 250px; overflow-y: auto;">
+        <h4 style="font-size: 0.82rem; color: var(--accent-terracotta); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; font-weight: 800;">Synopsis & Narrative Excerpt</h4>
+        <p class="modal-synopsis-box">
           ${escapeHtml(book.summary)}
         </p>
       </div>
@@ -949,7 +949,7 @@ function renderTargetSpotlight(targetBook, subclusteredMotifs = {}) {
   const genres = (targetBook.genres || 'General')
     .split(',')
     .slice(0, 4)
-    .map(g => `<span class="genre-tag" style="background:rgba(245, 158, 11, 0.15); color:#fde68a; border-color:rgba(245, 158, 11, 0.3);">${escapeHtml(g.trim())}</span>`)
+    .map(g => `<span class="genre-tag">${escapeHtml(g.trim())}</span>`)
     .join('');
 
   // 5 Dimension Cards definitions with rich explanatory subtitles
@@ -1085,9 +1085,9 @@ function renderTargetSpotlight(targetBook, subclusteredMotifs = {}) {
               <span class="spotlight-anchor-tag">${renderIcon('star', 'gold-icon')} Anchor Literature</span>
               ${targetBook.series_info ? `<span class="series-badge">${renderIcon('library')} ${escapeHtml(targetBook.series_info.full_tag)}</span>` : ''}
             </div>
-            <h2 style="font-size: 1.65rem; font-weight: 800; font-family: var(--font-serif); color: #ffffff; margin-top: 0.4rem; cursor: pointer;" onclick="openBookModal('${escapeHtml(targetBook.id)}')">${escapeHtml(targetBook.title)}</h2>
+            <h2 style="font-size: 1.75rem; font-weight: 800; font-family: var(--font-serif); color: var(--accent-leather); margin-top: 0.4rem; cursor: pointer;" onclick="openBookModal('${escapeHtml(targetBook.id)}')">${escapeHtml(targetBook.title)}</h2>
             <div style="font-size: 0.95rem; color: var(--text-secondary); margin-top: 0.2rem;">
-              by <strong style="color: ${pal.foil};">${escapeHtml(targetBook.author || 'Unknown')}</strong> &bull; 
+              by <strong style="color: var(--accent-terracotta);">${escapeHtml(targetBook.author || 'Unknown')}</strong> &bull; 
               <span style="color: var(--text-muted);">${escapeHtml(targetBook.pub_date || '')}</span>
             </div>
             <div class="book-metadata-row" style="margin-top: 0.5rem;">
@@ -1109,7 +1109,7 @@ function renderTargetSpotlight(targetBook, subclusteredMotifs = {}) {
           </div>
         </div>
         <div class="genre-tags" style="margin-top: 0.4rem;">${genres}</div>
-        <p style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.6; margin: 0.4rem 0; background: rgba(0,0,0,0.25); padding: 0.75rem 0.95rem; border-radius: var(--radius-sm); border-left: 3.5px solid ${pal.accent};">${escapeHtml(targetBook.summary)}</p>
+        <p class="spotlight-summary">${escapeHtml(targetBook.summary)}</p>
       </div>
     </div>
 
@@ -1130,7 +1130,7 @@ function renderTargetSpotlight(targetBook, subclusteredMotifs = {}) {
         </div>
 
         <div style="display: flex; gap: 0.6rem; align-items: center;">
-          <button class="action-btn" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.12); color: #cbd5e1; font-size: 0.78rem; padding: 0.4rem 0.8rem;" onclick="resetTuningDefaults()" title="Reset all sliders and motif filters">
+          <button class="action-btn action-btn-subtle" style="font-size: 0.78rem; padding: 0.4rem 0.8rem;" onclick="resetTuningDefaults()" title="Reset all sliders and motif filters">
             ${renderIcon('rotate-ccw')} Reset Calibration
           </button>
         </div>
@@ -1155,13 +1155,13 @@ function renderTargetSpotlight(targetBook, subclusteredMotifs = {}) {
           <!-- Active Motifs Tray -->
           <div class="active-motifs-tray">
             <span class="active-motifs-label">${renderIcon('target')} Active Filters:</span>
-            <span id="active-motifs-empty" style="font-size: 0.75rem; color: #94a3b8;">Click any motif below to cycle priority (+1.0x ➔ +1.6x ➔ +2.2x ➔ Exclude)</span>
+            <span id="active-motifs-empty" style="font-size: 0.75rem; color: var(--text-muted);">Click any motif below to cycle priority (+1.0x ➔ +1.6x ➔ +2.2x ➔ Exclude)</span>
             <div id="active-motifs-chips" style="display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center;"></div>
           </div>
 
           <!-- Inline Quick Trope Creator -->
           <div class="inline-trope-creator">
-            <span style="font-size: 0.8rem; font-weight: 700; color: #e5a93c; white-space: nowrap; display: flex; align-items: center; gap: 0.3rem;">${renderIcon('plus')} Custom Trope:</span>
+            <span style="font-size: 0.8rem; font-weight: 700; color: var(--accent-leather); white-space: nowrap; display: flex; align-items: center; gap: 0.3rem;">${renderIcon('plus')} Custom Trope:</span>
             <input type="text" id="inline-trope-input" class="inline-trope-input" placeholder="e.g. 'time loop', 'anti-hero', 'space fleet', 'hard magic system'..." onkeydown="if(event.key==='Enter') submitInlineCustomTrope();" />
             <div class="priority-choice-pills">
               <span class="choice-pill active" data-level="boost-2" onclick="selectInlineTropeLevel('boost-2', this)"><span class="status-indicator-dot dot-boost-2"></span> +1.0x</span>
@@ -1632,12 +1632,12 @@ function drawGalaxy() {
 
   ctx.clearRect(0, 0, w, h);
 
-  // Background deep space gradient
-  ctx.fillStyle = '#050b1a';
+  // Background warm celestial parchment
+  ctx.fillStyle = '#faf8f5';
   ctx.fillRect(0, 0, w, h);
 
-  // Background subtle grid lines
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+  // Background subtle ink grid lines
+  ctx.strokeStyle = 'rgba(56, 33, 16, 0.05)';
   ctx.lineWidth = 1;
   const gridSize = 60 * (galaxyTransform.scale / 3);
   for (let x = (galaxyTransform.x % gridSize); x < w; x += gridSize) {
@@ -1660,8 +1660,8 @@ function drawGalaxy() {
       ctx.beginPath();
       ctx.moveTo(originX, originY);
       ctx.lineTo(targetX, targetY);
-      ctx.strokeStyle = `rgba(6, 182, 212, ${Math.max(0.4, sim * 0.95)})`;
-      ctx.lineWidth = Math.max(1.8, sim * 3.8);
+      ctx.strokeStyle = `rgba(166, 77, 31, ${Math.max(0.45, sim * 0.95)})`;
+      ctx.lineWidth = Math.max(1.8, sim * 3.5);
       ctx.setLineDash([5, 4]);
       ctx.stroke();
       ctx.setLineDash([]);
@@ -1728,7 +1728,7 @@ function drawGalaxy() {
 
   // Draw Dimmed Background Stars in one single batch draw
   if (backgroundBatch.length > 0) {
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.fillStyle = 'rgba(56, 33, 16, 0.12)';
     ctx.beginPath();
     for (let i = 0; i < backgroundBatch.length; i += 2) {
       ctx.rect(backgroundBatch[i], backgroundBatch[i+1], 2, 2);
@@ -1750,52 +1750,51 @@ function drawGalaxy() {
     ctx.fill();
   }
 
-  // Draw Suggested Neighbor Stars (Glowing Cyan)
+  // Draw Suggested Neighbor Stars (Terracotta / Forest Accent)
   neighborStars.forEach(({ p, screenX, screenY }) => {
     ctx.beginPath();
-    ctx.arc(screenX, screenY, 9, 0, Math.PI * 2);
-    ctx.fillStyle = '#06b6d4';
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = '#06b6d4';
+    ctx.arc(screenX, screenY, 8, 0, Math.PI * 2);
+    ctx.fillStyle = '#a64d1f';
     ctx.fill();
-    ctx.shadowBlur = 0;
+
+    // Subtle outline
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
 
     // Star Title Tag
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 11px Inter, sans-serif';
-    ctx.fillText(p.title, screenX + 13, screenY + 4);
+    ctx.fillStyle = '#1e1915';
+    ctx.font = 'bold 11px Plus Jakarta Sans, sans-serif';
+    ctx.fillText(p.title, screenX + 12, screenY + 4);
   });
 
-  // Draw Target Book Star (Radiant Gold)
+  // Draw Target Book Star (Rich Editorial Ochre/Amber)
   if (targetStarData || (targetBookPoint && targetBookPoint.x !== undefined)) {
     const screenX = targetStarData ? targetStarData.screenX : (galaxyTransform.x + targetBookPoint.x * galaxyTransform.scale);
     const screenY = targetStarData ? targetStarData.screenY : (galaxyTransform.y + targetBookPoint.y * galaxyTransform.scale);
     const title = targetStarData ? targetStarData.p.title : targetBookPoint.title;
 
     ctx.beginPath();
-    ctx.arc(screenX, screenY, 14, 0, Math.PI * 2);
-    ctx.fillStyle = '#f59e0b';
-    ctx.shadowBlur = 30;
-    ctx.shadowColor = '#f59e0b';
+    ctx.arc(screenX, screenY, 13, 0, Math.PI * 2);
+    ctx.fillStyle = '#c98a2c';
     ctx.fill();
-    ctx.shadowBlur = 0;
 
-    // Glowing Pulse Rings
+    // Outer Target Rings
     ctx.beginPath();
-    ctx.arc(screenX, screenY, 22, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.8)';
-    ctx.lineWidth = 2.5;
+    ctx.arc(screenX, screenY, 20, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(201, 138, 44, 0.8)';
+    ctx.lineWidth = 2;
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.arc(screenX, screenY, 28, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.25)';
+    ctx.arc(screenX, screenY, 26, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(201, 138, 44, 0.3)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 14px Outfit, Inter, sans-serif';
-    ctx.fillText(title, screenX + 32, screenY + 5);
+    ctx.fillStyle = '#1e1915';
+    ctx.font = 'bold 13px Playfair Display, Georgia, serif';
+    ctx.fillText(title, screenX + 30, screenY + 5);
   }
 
   // Draw Hovered Star Details if active
@@ -1804,7 +1803,7 @@ function drawGalaxy() {
     const hy = galaxyTransform.y + (hoveredPoint.y || 0) * galaxyTransform.scale;
     ctx.beginPath();
     ctx.arc(hx, hy, 8, 0, Math.PI * 2);
-    ctx.strokeStyle = '#ffffff';
+    ctx.strokeStyle = '#1e1915';
     ctx.lineWidth = 2;
     ctx.stroke();
   }
@@ -1878,10 +1877,10 @@ function handleGalaxyHover(e) {
     tooltip.style.left = `${leftPos}px`;
     tooltip.style.top = `${topPos}px`;
     tooltip.innerHTML = `
-      <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">${escapeHtml(hoveredPoint.title)}</div>
-      <div style="color: var(--accent-cyan); font-size: 0.8rem; margin: 0.2rem 0;">by ${escapeHtml(hoveredPoint.author || 'Unknown')}</div>
+      <div style="font-weight: 700; color: var(--accent-leather); font-size: 0.95rem; font-family: var(--font-serif);">${escapeHtml(hoveredPoint.title)}</div>
+      <div style="color: var(--accent-terracotta); font-size: 0.8rem; margin: 0.2rem 0; font-weight: 600;">by ${escapeHtml(hoveredPoint.author || 'Unknown')}</div>
       <div style="color: var(--text-muted); font-size: 0.75rem;">${escapeHtml(hoveredPoint.genres || '')}</div>
-      <div style="font-size: 0.75rem; color: #a5b4fc; margin-top: 0.4rem;">Tap star to view full details ➔</div>
+      <div style="font-size: 0.74rem; color: var(--accent-forest); font-weight: 700; margin-top: 0.4rem;">Click star to inspect vector profile ➔</div>
     `;
     galaxyCanvas.style.cursor = 'pointer';
   } else if (tooltip) {
@@ -1956,12 +1955,6 @@ function renderResults(books, title, latency, targetBook = null, conceptKeywords
     const scoreVal = b.weighted_score !== undefined ? b.weighted_score : b.similarity_score;
     const simPercent = scoreVal !== undefined ? Math.round(scoreVal * 100) : 85;
 
-    const genresHtml = (b.genres || 'General')
-      .split(',')
-      .slice(0, 3)
-      .map(g => `<span class="genre-tag">${escapeHtml(g.trim())}</span>`)
-      .join('');
-
     const pop = b.popularity || {
       tier: 'Popular Favorite',
       icon: 'library',
@@ -1985,49 +1978,30 @@ function renderResults(books, title, latency, targetBook = null, conceptKeywords
       audience_pct: Math.min(99, Math.max(40, Math.round((b.collaborative_affinity || 0.65) * 100)))
     };
 
-    // Primary reason highlight for front face
-    let primaryHookHtml = '';
-    if (b.similarity_reasons && b.similarity_reasons.length > 0) {
-      primaryHookHtml = `
-        <div class="card-primary-hook" title="${escapeHtml(b.similarity_reasons[0])}">
-          ${renderIcon('lightbulb')}
-          <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(b.similarity_reasons[0])}</span>
-        </div>
-      `;
-    }
-
-    // Full Explainability Reasons for back face
+    // Reasons pills for back face
     let reasonsHtml = '';
     if (b.similarity_reasons && b.similarity_reasons.length > 0) {
       const reasonPills = b.similarity_reasons
-        .map(r => `<span class="reason-pill">${renderIcon('lightbulb')} ${escapeHtml(r)}</span>`)
+        .map(r => `<div class="reason-pill">${renderIcon('lightbulb')} ${escapeHtml(r)}</div>`)
         .join('');
       reasonsHtml = `
         <div class="why-similar-box">
-          <div class="why-similar-title">${renderIcon('target')} Similarity Rationale:</div>
+          <div class="why-similar-title">${renderIcon('target')} Why Similar:</div>
           <div class="why-similar-tags">${reasonPills}</div>
         </div>
       `;
     }
 
-    const metadataBadgesHtml = `
-      <div class="card-front-badges">
-        <span class="sim-score-badge" style="background: ${pal.tint}; border-color: ${pal.border}; color: #ffffff;">${simPercent}% Match</span>
-        <span class="rating-badge">${renderIcon('star', 'gold-star')} ${pop.rating}★ <span style="opacity: 0.85; font-size: 0.68rem;">(${Number(pop.ratings_count).toLocaleString()})</span></span>
-        <span class="popularity-badge">${renderIcon(pop.icon || 'sparkles', 'badge-icon')} ${pop.label}</span>
-      </div>
-    `;
-
     const matchBreakdownHtml = `
       <div class="match-breakdown-card">
         <div class="match-breakdown-header">
           <span>${renderIcon('bar-chart')} Vector Decomposition</span>
-          <span style="color: var(--accent-gold); font-weight: 800; font-family: monospace;">${simPercent}% Match</span>
+          <span style="color: var(--accent-gold); font-weight: 800; font-family: monospace;">${simPercent}%</span>
         </div>
         <div class="breakdown-bars-grid">
           <div class="breakdown-bar-item">
             <div class="breakdown-bar-label">
-              <span>${renderIcon('book-open')} Plot & Premise</span>
+              <span>Plot & Premise</span>
               <span>${breakdown.plot_pct}%</span>
             </div>
             <div class="breakdown-bar-track">
@@ -2036,7 +2010,7 @@ function renderResults(books, title, latency, targetBook = null, conceptKeywords
           </div>
           <div class="breakdown-bar-item">
             <div class="breakdown-bar-label">
-              <span>${renderIcon('sparkles')} Thematic Motifs</span>
+              <span>Thematic Motifs</span>
               <span>${breakdown.theme_pct}%</span>
             </div>
             <div class="breakdown-bar-track">
@@ -2045,7 +2019,7 @@ function renderResults(books, title, latency, targetBook = null, conceptKeywords
           </div>
           <div class="breakdown-bar-item">
             <div class="breakdown-bar-label">
-              <span>${renderIcon('target')} Style & Voice</span>
+              <span>Style & Voice</span>
               <span>${breakdown.style_pct}%</span>
             </div>
             <div class="breakdown-bar-track">
@@ -2054,7 +2028,7 @@ function renderResults(books, title, latency, targetBook = null, conceptKeywords
           </div>
           <div class="breakdown-bar-item">
             <div class="breakdown-bar-label">
-              <span>${renderIcon('users')} Audience Co-Taste</span>
+              <span>Audience Co-Taste</span>
               <span>${breakdown.audience_pct}%</span>
             </div>
             <div class="breakdown-bar-track">
@@ -2065,74 +2039,54 @@ function renderResults(books, title, latency, targetBook = null, conceptKeywords
       </div>
     `;
 
-    const dnaStripHtml = `
-      <div class="narrative-dna-strip">
-        <span class="dna-pill">${renderIcon('target')} ${escapeHtml(style.pov)}</span>
-        <span class="dna-pill">${renderIcon('clock')} ${escapeHtml(style.pacing)}</span>
-        <span class="dna-pill">${renderIcon('feather')} ${escapeHtml(style.prose_style || 'Grounded')}</span>
-      </div>
-    `;
-
     cardWrap.innerHTML = `
       <div class="book-card-inner" id="card-inner-${escapeHtml(b.id)}">
-        <!-- FRONT FACE -->
-        <div class="book-card-face book-card-front" style="--book-tint: ${pal.tint}; --book-border: ${pal.border}; --book-accent: ${pal.accent};">
-          <div>
-            <div class="card-front-top">
-              <div class="card-cover-slot" onclick="openBookModal('${escapeHtml(b.id)}')">
-                ${renderBookCover(b, 'medium')}
-              </div>
-              <div class="card-front-info">
-                <div class="card-front-header">
-                  <h3 class="book-title" onclick="openBookModal('${escapeHtml(b.id)}')">${escapeHtml(b.title)}</h3>
-                  <div class="book-author">by <strong style="color: #cbd5e1;">${escapeHtml(b.author || 'Unknown')}</strong> &bull; <span style="color: var(--text-muted); font-size: 0.8rem;">${escapeHtml(b.pub_date || '')}</span></div>
-                </div>
-                ${metadataBadgesHtml}
-                <div class="genre-tags" style="margin-top: 0.35rem;">${genresHtml}</div>
-                ${primaryHookHtml}
-              </div>
-            </div>
-            <p class="book-summary-brief" title="${escapeHtml(b.summary)}" onclick="openBookModal('${escapeHtml(b.id)}')">${escapeHtml(b.summary)}</p>
+        <!-- FRONT FACE: PURE CLEAN POSTER (CLICK TO FLIP) -->
+        <div class="book-card-face book-card-front" style="--book-border: ${pal.border};" onclick="toggleCardFlip('${escapeHtml(b.id)}')" title="Click card to flip for vector decomposition">
+          <div class="card-poster-art">
+            ${renderBookCover(b, 'medium')}
           </div>
           
-          <div class="card-front-footer">
-            <button class="card-flip-trigger-btn" onclick="toggleCardFlip('${escapeHtml(b.id)}', event)">
-              ${renderIcon('sliders')}
-              <span>Decomposition & DNA</span>
-              ${renderIcon('rotate-cw', 'flip-icon-spin')}
-            </button>
-            <button class="btn-similar-compact" onclick="exploreBook('${escapeHtml(b.id)}', '${escapeHtml(b.title).replace(/'/g, "\\'")}')" title="Explore from this book">
-              <span>Discover</span>
-              ${renderIcon('arrow-right')}
-            </button>
+          <div class="card-top-floating-badge" style="border-color: ${pal.border}; color: ${pal.primary};">
+            ${simPercent}% Match
+          </div>
+
+          <div class="card-bottom-scrim">
+            <h4 class="card-poster-title">${escapeHtml(b.title)}</h4>
+            <div class="card-poster-meta">
+              <span class="card-poster-author">by ${escapeHtml(b.author || 'Unknown')}</span>
+              <span class="card-poster-rating">${renderIcon('star', 'gold-star')} ${pop.rating}★</span>
+            </div>
           </div>
         </div>
 
-        <!-- BACK FACE -->
-        <div class="book-card-face book-card-back" style="--book-tint: ${pal.tint}; --book-border: ${pal.border}; --book-accent: ${pal.accent};">
-          <div>
+        <!-- BACK FACE: DECOMPOSITION & ACTIONS (ZERO SCROLLBAR) -->
+        <div class="book-card-face book-card-back" style="--book-border: ${pal.border};">
+          <div class="card-back-main">
             <div class="card-back-header">
-              <div class="card-back-title-group">
-                <span class="card-back-pretitle">Neural Decomposition</span>
-                <h4 class="card-back-book-title">${escapeHtml(b.title)}</h4>
+              <div style="min-width: 0; flex: 1;">
+                <h4 class="card-back-title" title="${escapeHtml(b.title)}">${escapeHtml(b.title)}</h4>
+                <div class="card-back-author">by ${escapeHtml(b.author || 'Unknown')}</div>
               </div>
-              <button class="card-flip-back-btn" onclick="toggleCardFlip('${escapeHtml(b.id)}', event)" title="Flip back to front">
+              <button class="card-back-flip-btn" onclick="toggleCardFlip('${escapeHtml(b.id)}', event)" title="Flip back to cover">
                 ${renderIcon('rotate-ccw')}
-                <span>Flip Front</span>
               </button>
             </div>
+
             ${matchBreakdownHtml}
-            ${dnaStripHtml}
-            ${reasonsHtml}
+
+            <div class="card-back-summary-chip">
+              ${renderIcon('lightbulb')}
+              <span>${b.similarity_reasons && b.similarity_reasons.length > 0 ? escapeHtml(b.similarity_reasons[0]) : escapeHtml(style.prose_style || 'Narrative Affinity')}</span>
+            </div>
           </div>
           
           <div class="card-back-footer">
             <button class="action-btn action-btn-subtle" onclick="openBookModal('${escapeHtml(b.id)}')">
-              ${renderIcon('bar-chart')} Deep Analysis
+              ${renderIcon('book-open')} Deep Analysis
             </button>
-            <button class="btn-similar" onclick="exploreBook('${escapeHtml(b.id)}', '${escapeHtml(b.title).replace(/'/g, "\\'")}')">
-              <span>Discover Similar</span>
-              ${renderIcon('arrow-right')}
+            <button class="action-btn btn-search-primary" onclick="exploreBook('${escapeHtml(b.id)}', '${escapeHtml(b.title).replace(/'/g, "\\'")}')">
+              <span>Explore ➔</span>
             </button>
           </div>
         </div>
@@ -2164,39 +2118,58 @@ function escapeHtml(text) {
 
 let currentAppMode = 'anchor'; // 'anchor' or 'profile'
 let profileHistory = [];
-let profileAutocompleteResults = [];
 let profileActiveIndex = -1;
 
-const PROFILE_ASPECTS = [
-  { id: 'world_building', label: 'World-Building', icon: 'orbit' },
-  { id: 'philosophical', label: 'Philosophy & Mind', icon: 'brain' },
-  { id: 'plot_twists', label: 'Plot Twists', icon: 'sparkles' },
-  { id: 'prose_style', label: 'Lyrical Prose', icon: 'feather' },
-  { id: 'dark_atmosphere', label: 'Dark Atmosphere', icon: 'flame' },
-  { id: 'fast_pacing', label: 'Fast Pacing', icon: 'zap' },
-  { id: 'character_depth', label: 'Character Drama', icon: 'users' }
+const UNIVERSAL_PILLARS = [
+  { id: 'plot_premise', label: 'Plot & Premise', icon: 'book-open' },
+  { id: 'prose_craft', label: 'Prose & Craft', icon: 'feather' },
+  { id: 'character_voice', label: 'Characters & Voice', icon: 'users' },
+  { id: 'atmosphere_mood', label: 'Atmosphere & Mood', icon: 'orbit' },
+  { id: 'narrative_pacing', label: 'Story Pacing', icon: 'clock' }
 ];
+
+function extractBookMotifsList(book) {
+  const motifs = [];
+  if (book.subclustered_motifs) {
+    Object.values(book.subclustered_motifs).forEach(arr => {
+      if (Array.isArray(arr)) {
+        arr.forEach(m => {
+          if (m && !motifs.includes(m)) motifs.push(m);
+        });
+      }
+    });
+  }
+  if (motifs.length === 0 && book.genres) {
+    book.genres.split(',').forEach(g => {
+      const clean = g.trim();
+      if (clean && clean !== 'General' && !motifs.includes(clean)) {
+        motifs.push(clean);
+      }
+    });
+  }
+  return motifs.slice(0, 8);
+}
 
 const STARTER_PROFILES = {
   scifi: [
-    { title: "Dune", rating: 5, aspects: ["world_building", "philosophical"] },
-    { title: "The Three-Body Problem", rating: 5, aspects: ["world_building", "plot_twists"] },
-    { title: "Solaris", rating: 4, aspects: ["philosophical", "dark_atmosphere"] }
+    { title: "Dune", rating: 5, aspects: ["plot_premise", "atmosphere_mood"] },
+    { title: "The Three-Body Problem", rating: 5, aspects: ["plot_premise", "narrative_pacing"] },
+    { title: "Solaris", rating: 4, aspects: ["prose_craft", "atmosphere_mood"] }
   ],
   gothic: [
-    { title: "Frankenstein", rating: 5, aspects: ["philosophical", "dark_atmosphere"] },
-    { title: "Dracula", rating: 4, aspects: ["dark_atmosphere", "plot_twists"] },
-    { title: "The Picture of Dorian Gray", rating: 5, aspects: ["prose_style", "philosophical"] }
+    { title: "Frankenstein", rating: 5, aspects: ["prose_craft", "atmosphere_mood"] },
+    { title: "Dracula", rating: 4, aspects: ["plot_premise", "atmosphere_mood"] },
+    { title: "The Picture of Dorian Gray", rating: 5, aspects: ["prose_craft", "character_voice"] }
   ],
   fantasy: [
-    { title: "The Fellowship of the Ring", rating: 5, aspects: ["world_building", "prose_style"] },
-    { title: "The Name of the Wind", rating: 5, aspects: ["prose_style", "character_depth"] },
-    { title: "A Game of Thrones", rating: 4, aspects: ["plot_twists", "character_depth"] }
+    { title: "The Fellowship of the Ring", rating: 5, aspects: ["prose_craft", "atmosphere_mood"] },
+    { title: "The Name of the Wind", rating: 5, aspects: ["prose_craft", "character_voice"] },
+    { title: "A Game of Thrones", rating: 4, aspects: ["plot_premise", "character_voice"] }
   ],
   thriller: [
-    { title: "Gone Girl", rating: 5, aspects: ["plot_twists", "character_depth"] },
-    { title: "Shutter Island", rating: 5, aspects: ["plot_twists", "dark_atmosphere"] },
-    { title: "Dark Matter", rating: 4, aspects: ["fast_pacing", "plot_twists"] }
+    { title: "Gone Girl", rating: 5, aspects: ["plot_premise", "character_voice"] },
+    { title: "Shutter Island", rating: 5, aspects: ["plot_premise", "atmosphere_mood"] },
+    { title: "Dark Matter", rating: 4, aspects: ["plot_premise", "narrative_pacing"] }
   ]
 };
 
@@ -2237,14 +2210,21 @@ async function loadStarterProfile(presetKey) {
       const data = await res.json();
       if (data && data.length > 0) {
         const book = data[0];
+        const motifs = extractBookMotifsList(book);
+        const defaultMotif = motifs.length > 0 ? [motifs[0]] : [];
         profileHistory.push({
           id: String(book.id),
           title: book.title,
           author: book.author,
           genres: book.genres,
           pub_date: book.pub_date,
+          cover_id: book.cover_id,
+          cover_url: book.cover_url,
+          subclustered_motifs: book.subclustered_motifs,
           rating: item.rating,
-          liked_aspects: [...item.aspects]
+          universal_pillars: [...item.aspects],
+          selected_motifs: defaultMotif,
+          liked_aspects: [...item.aspects, ...defaultMotif]
         });
       }
     } catch (e) {
@@ -2344,46 +2324,71 @@ async function handleProfileBookAdd() {
 }
 
 function addBookToHistory(book) {
-  const exists = profileHistory.some(b => String(b.id) === String(book.id) || b.title.toLowerCase() === book.title.toLowerCase());
+  const bId = String(book.id);
+  const exists = profileHistory.some(b => String(b.id) === bId || b.title.toLowerCase() === book.title.toLowerCase());
   if (exists) return;
 
-  profileHistory.unshift({
-    id: String(book.id),
+  const availableMotifs = extractBookMotifsList(book);
+  const defaultMotif = availableMotifs.length > 0 ? [availableMotifs[0]] : [];
+  const defaultPillars = ['plot_premise', 'prose_craft'];
+
+  profileHistory.push({
+    id: bId,
     title: book.title,
     author: book.author,
     genres: book.genres,
     pub_date: book.pub_date,
+    cover_id: book.cover_id,
+    cover_url: book.cover_url,
+    subclustered_motifs: book.subclustered_motifs,
     rating: 5,
-    liked_aspects: ['world_building', 'philosophical']
+    universal_pillars: defaultPillars,
+    selected_motifs: defaultMotif,
+    liked_aspects: [...defaultPillars, ...defaultMotif]
   });
 
   renderBookshelf();
 }
 
-function setHistoryRating(idx, rating) {
-  if (profileHistory[idx]) {
-    profileHistory[idx].rating = rating;
+function setHistoryRatingById(bookId, rating) {
+  const item = profileHistory.find(b => String(b.id) === String(bookId));
+  if (item) {
+    item.rating = Number(rating);
     renderBookshelf();
   }
 }
 
-function toggleHistoryAspect(idx, aspectId) {
-  const item = profileHistory[idx];
+function toggleUniversalPillar(bookId, pillarId) {
+  const item = profileHistory.find(b => String(b.id) === String(bookId));
   if (!item) return;
-
-  if (item.liked_aspects.includes(aspectId)) {
-    item.liked_aspects = item.liked_aspects.filter(a => a !== aspectId);
+  item.universal_pillars = item.universal_pillars || [];
+  if (item.universal_pillars.includes(pillarId)) {
+    item.universal_pillars = item.universal_pillars.filter(p => p !== pillarId);
   } else {
-    if (item.liked_aspects.length >= 2) {
-      item.liked_aspects.shift(); // keep max 2 highlights
+    if (item.universal_pillars.length >= 2) {
+      item.universal_pillars.shift(); // Keep max 2
     }
-    item.liked_aspects.push(aspectId);
+    item.universal_pillars.push(pillarId);
   }
+  item.liked_aspects = [...(item.universal_pillars || []), ...(item.selected_motifs || [])];
   renderBookshelf();
 }
 
-function removeFromProfileHistory(idx) {
-  profileHistory.splice(idx, 1);
+function toggleBookMotif(bookId, motif) {
+  const item = profileHistory.find(b => String(b.id) === String(bookId));
+  if (!item) return;
+  item.selected_motifs = item.selected_motifs || [];
+  if (item.selected_motifs.includes(motif)) {
+    item.selected_motifs = item.selected_motifs.filter(m => m !== motif);
+  } else {
+    item.selected_motifs = [motif]; // Pick 1 specific motif
+  }
+  item.liked_aspects = [...(item.universal_pillars || []), ...(item.selected_motifs || [])];
+  renderBookshelf();
+}
+
+function removeFromProfileHistory(bookId) {
+  profileHistory = profileHistory.filter(b => String(b.id) !== String(bookId));
   renderBookshelf();
 }
 
@@ -2396,11 +2401,11 @@ function clearProfileHistory() {
 function renderBookshelf() {
   const container = document.getElementById('profile-bookshelf-grid');
   const countEl = document.getElementById('shelf-count');
-  countEl.textContent = profileHistory.length;
+  if (countEl) countEl.textContent = profileHistory.length;
 
   if (profileHistory.length === 0) {
     container.innerHTML = `
-      <div style="grid-column: 1 / -1; text-align: center; padding: 2.5rem; background: rgba(0,0,0,0.25); border-radius: var(--radius-md); border: 1px dashed var(--border-subtle);">
+      <div style="grid-column: 1 / -1; text-align: center; padding: 2.5rem; background: var(--bg-surface); border-radius: var(--radius-md); border: 1px dashed var(--border-medium);">
         <p style="color: var(--text-secondary); font-size: 0.95rem;">Your reading bookshelf is empty. Search and add books above, or pick one of the Instant Starter Shelves!</p>
       </div>
     `;
@@ -2414,46 +2419,75 @@ function renderBookshelf() {
     return;
   }
 
-  container.innerHTML = profileHistory.map((item, idx) => {
+  container.innerHTML = profileHistory.map(item => {
+    const bId = escapeHtml(item.id);
     const pal = getBookPalette(item);
-    // Star rating buttons
+    const availableMotifs = extractBookMotifsList(item);
+
+    // Star rating buttons (1 to 5)
     const starsHtml = [1, 2, 3, 4, 5].map(starVal => {
       const activeClass = starVal <= item.rating ? 'active-star' : '';
-      return `<button class="star-btn ${activeClass}" onclick="setHistoryRating(${idx}, ${starVal})" title="Rank ${starVal} Stars">★</button>`;
+      return `<button class="star-btn ${activeClass}" onclick="setHistoryRatingById('${bId}', ${starVal})" title="Rate ${starVal} Stars">★</button>`;
     }).join('');
 
     const ratingLabel = item.rating === 5 ? 'Loved (Top Weight)' :
                         item.rating === 4 ? 'Liked' :
                         item.rating === 3 ? 'Neutral' :
-                        item.rating === 2 ? 'Disliked' : 'Exclude Traits';
+                        item.rating === 2 ? 'Disliked' : 'Exclude';
 
-    // Aspect buttons
-    const aspectsHtml = PROFILE_ASPECTS.map(asp => {
-      const isSelected = item.liked_aspects.includes(asp.id);
+    // Universal Pillars (Pick up to 2)
+    const universalPillarsHtml = UNIVERSAL_PILLARS.map(p => {
+      const isSelected = (item.universal_pillars || []).includes(p.id);
       const activeClass = isSelected ? 'active' : '';
       return `
-        <span class="aspect-choice-pill ${activeClass}" onclick="toggleHistoryAspect(${idx}, '${asp.id}')">
-          ${renderIcon(asp.icon)} ${asp.label}
+        <span class="aspect-choice-pill ${activeClass}" onclick="toggleUniversalPillar('${bId}', '${p.id}')">
+          ${renderIcon(p.icon)} ${p.label}
         </span>
       `;
     }).join('');
 
+    // Dynamic Book-Specific Motifs (Pick 1)
+    let motifsSectionHtml = '';
+    if (availableMotifs.length > 0) {
+      const motifPillsHtml = availableMotifs.map(m => {
+        const isSelected = (item.selected_motifs || []).includes(m);
+        const activeClass = isSelected ? 'active' : '';
+        return `
+          <span class="motif-choice-pill ${activeClass}" onclick="toggleBookMotif('${bId}', '${escapeHtml(m)}')">
+            ${renderIcon('tag')} ${escapeHtml(m)}
+          </span>
+        `;
+      }).join('');
+
+      motifsSectionHtml = `
+        <div class="shelf-highlights-section" style="margin-top: 0.35rem;">
+          <div class="shelf-highlights-label">
+            <span>Book-Specific Motifs:</span>
+            <span style="color: var(--accent-terracotta); font-size: 0.65rem;">(Pick 1)</span>
+          </div>
+          <div class="aspect-choice-strip">
+            ${motifPillsHtml}
+          </div>
+        </div>
+      `;
+    }
+
     return `
-      <div class="bookshelf-card" style="--shelf-accent: ${pal.accent}; --shelf-border: ${pal.border}; --shelf-tint: ${pal.tint};">
-        <div class="bookshelf-card-cover" onclick="openBookModal('${escapeHtml(item.id)}')">
+      <div class="bookshelf-card" style="--shelf-accent: ${pal.accent}; --shelf-border: ${pal.border};">
+        <div class="bookshelf-card-cover" onclick="openBookModal('${bId}')">
           ${renderBookCover(item, 'small')}
         </div>
         <div class="bookshelf-card-body">
           <div class="shelf-card-header">
             <div>
-              <h4 class="shelf-book-title" onclick="openBookModal('${escapeHtml(item.id)}')" style="cursor: pointer;">${escapeHtml(item.title)}</h4>
-              <div class="shelf-book-author">by <strong style="color: #cbd5e1;">${escapeHtml(item.author || 'Unknown')}</strong></div>
+              <h4 class="shelf-book-title" onclick="openBookModal('${bId}')" style="cursor: pointer;">${escapeHtml(item.title)}</h4>
+              <div class="shelf-book-author">by <strong style="color: var(--accent-terracotta); font-weight: 600;">${escapeHtml(item.author || 'Unknown')}</strong></div>
             </div>
-            <button class="shelf-remove-btn" onclick="removeFromProfileHistory(${idx})" title="Remove from Shelf">✕</button>
+            <button class="shelf-remove-btn" onclick="removeFromProfileHistory('${bId}')" title="Remove from Shelf">✕</button>
           </div>
 
           <div>
-            <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.2rem;">
+            <div style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.15rem;">
               Your Rating:
             </div>
             <div class="star-rating-group">
@@ -2462,20 +2496,22 @@ function renderBookshelf() {
             </div>
           </div>
 
-          <div>
-            <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.3rem;">
-              Key Highlight Qualities:
+          <div class="shelf-highlights-section">
+            <div class="shelf-highlights-label">
+              <span>Universal Literary Pillars:</span>
+              <span style="color: var(--accent-terracotta); font-size: 0.65rem;">(Pick up to 2)</span>
             </div>
             <div class="aspect-choice-strip">
-              ${aspectsHtml}
+              ${universalPillarsHtml}
             </div>
           </div>
+
+          ${motifsSectionHtml}
         </div>
       </div>
     `;
   }).join('');
 
-  // Live client-side preview of Taste DNA
   updateTasteDNADashboardClient();
 }
 
@@ -2542,10 +2578,10 @@ function renderTasteDNADashboard(tasteDna) {
   `).join('') || '<div style="color: var(--text-muted); font-size: 0.76rem;">Add books to compute genre spectrum</div>';
 
   const aspectPillsHtml = (tasteDna.top_aspects || []).map(a => {
-    const aspObj = PROFILE_ASPECTS.find(p => p.id === a.aspect) || { label: a.aspect.replace('_', ' '), icon: 'sparkles' };
+    const pObj = UNIVERSAL_PILLARS.find(p => p.id === a.aspect) || { label: a.aspect.replace(/_/g, ' '), icon: 'sparkles' };
     return `
       <span class="dna-aspect-pill">
-        <span>${renderIcon(aspObj.icon)} ${aspObj.label}</span>
+        <span>${renderIcon(pObj.icon)} ${pObj.label}</span>
         <strong style="color: var(--accent-gold); margin-left: 0.4rem;">${a.percentage}%</strong>
       </span>
     `;
@@ -2648,27 +2684,50 @@ function renderProfileResults(books, latency) {
 
     const pal = getBookPalette(b);
     const simPercent = b.weighted_score !== undefined ? Math.round(b.weighted_score * 100) : 85;
-    const genres = (b.genres || '').split(',').map(g => g.trim()).filter(g => g && g !== 'General').slice(0, 3);
-    const genresHtml = genres.map(g => `<span class="genre-tag">${escapeHtml(g)}</span>`).join('');
+    const pop = b.popularity || { tier: 'Acclaimed Read', icon: 'sparkles', label: 'Acclaimed Read', rating: b.community_rating || '4.10' };
 
-    const pop = b.popularity || { tier: 'Acclaimed Read', icon: 'sparkles', label: 'Acclaimed Read' };
-    const ratingVal = b.rating ? parseFloat(b.rating).toFixed(2) : (b.community_rating || '4.10');
-    const reviewsCount = b.ratings_count ? Number(b.ratings_count).toLocaleString() : '1,250';
+    // Breakdown bars
+    const breakdown = b.match_breakdown || { plot_pct: 85, theme_pct: 82, style_pct: 80, audience_pct: 75 };
+    const breakdownHtml = `
+      <div class="match-breakdown-card">
+        <div class="match-breakdown-header">
+          <span>${renderIcon('sliders')} Vector Alignment</span>
+          <span style="color: var(--accent-gold); font-weight: 800; font-family: monospace;">${simPercent}%</span>
+        </div>
+        <div class="breakdown-bars-grid">
+          <div class="breakdown-bar-item">
+            <div class="breakdown-bar-label"><span>Plot & Premise</span><span>${breakdown.plot_pct}%</span></div>
+            <div class="breakdown-bar-track"><div class="breakdown-bar-fill fill-plot" style="width: ${breakdown.plot_pct}%;"></div></div>
+          </div>
+          <div class="breakdown-bar-item">
+            <div class="breakdown-bar-label"><span>Thematic Motifs</span><span>${breakdown.theme_pct}%</span></div>
+            <div class="breakdown-bar-track"><div class="breakdown-bar-fill fill-theme" style="width: ${breakdown.theme_pct}%;"></div></div>
+          </div>
+          <div class="breakdown-bar-item">
+            <div class="breakdown-bar-label"><span>Style & Voice</span><span>${breakdown.style_pct}%</span></div>
+            <div class="breakdown-bar-track"><div class="breakdown-bar-fill fill-style" style="width: ${breakdown.style_pct}%;"></div></div>
+          </div>
+          <div class="breakdown-bar-item">
+            <div class="breakdown-bar-label"><span>Audience Co-Taste</span><span>${breakdown.audience_pct}%</span></div>
+            <div class="breakdown-bar-track"><div class="breakdown-bar-fill fill-audience" style="width: ${breakdown.audience_pct}%;"></div></div>
+          </div>
+        </div>
+      </div>
+    `;
 
-    // Influence Attribution Box
+    // Influence Attribution
     let influenceHtml = '';
     if (b.top_influences && b.top_influences.length > 0) {
       const chips = b.top_influences.map(inf => `
         <span class="influence-chip">
           <strong>${escapeHtml(inf.book_title)}</strong> (${inf.rating}★)
-          ${inf.shared_aspects && inf.shared_aspects.length > 0 ? `&bull; ${inf.shared_aspects.join(', ')}` : ''}
         </span>
       `).join('');
 
       influenceHtml = `
         <div class="profile-influence-box">
           <div class="influence-header">
-            ${renderIcon('sparkles')} Historical Taste Resonance:
+            ${renderIcon('sparkles')} Taste Resonance:
           </div>
           <div class="influence-chips-row">
             ${chips}
@@ -2677,116 +2736,56 @@ function renderProfileResults(books, latency) {
       `;
     }
 
-    // Matched aspects badges
-    const matchedAspectsHtml = (b.matched_aspects || []).map(a => `
-      <span class="dna-pill" style="border-color: ${pal.border}; color: ${pal.foil};">
-        ${renderIcon('sparkles')} ${escapeHtml(a)}
-      </span>
-    `).join('');
-
-    // Vector Breakdown
-    const breakdown = b.match_breakdown || { plot_pct: 85, theme_pct: 82, style_pct: 80, audience_pct: 75 };
-    const breakdownHtml = `
-      <div class="match-breakdown-card">
-        <div class="match-breakdown-header">
-          <span>${renderIcon('sliders')} Profile Alignment Vectors</span>
-          <span style="color: var(--accent-gold); font-weight: 800; font-family: monospace;">${simPercent}% Overall</span>
-        </div>
-        <div class="breakdown-bars-grid">
-          <div class="breakdown-bar-item">
-            <div class="breakdown-bar-label"><span>${renderIcon('book-open')} Narrative Plot</span><span>${breakdown.plot_pct}%</span></div>
-            <div class="breakdown-bar-track"><div class="breakdown-bar-fill fill-plot" style="width: ${breakdown.plot_pct}%;"></div></div>
-          </div>
-          <div class="breakdown-bar-item">
-            <div class="breakdown-bar-label"><span>${renderIcon('sparkles')} Thematic Depth</span><span>${breakdown.theme_pct}%</span></div>
-            <div class="breakdown-bar-track"><div class="breakdown-bar-fill fill-theme" style="width: ${breakdown.theme_pct}%;"></div></div>
-          </div>
-          <div class="breakdown-bar-item">
-            <div class="breakdown-bar-label"><span>${renderIcon('target')} Style & Voice</span><span>${breakdown.style_pct}%</span></div>
-            <div class="breakdown-bar-track"><div class="breakdown-bar-fill fill-style" style="width: ${breakdown.style_pct}%;"></div></div>
-          </div>
-          <div class="breakdown-bar-item">
-            <div class="breakdown-bar-label"><span>${renderIcon('users')} Reader Affinity</span><span>${breakdown.audience_pct}%</span></div>
-            <div class="breakdown-bar-track"><div class="breakdown-bar-fill fill-audience" style="width: ${breakdown.audience_pct}%;"></div></div>
-          </div>
-        </div>
-      </div>
-    `;
-
     cardWrap.innerHTML = `
       <div class="book-card-inner" id="card-inner-${escapeHtml(b.id)}">
-        <!-- FRONT FACE -->
-        <div class="book-card-face book-card-front" style="--book-tint: ${pal.tint}; --book-border: ${pal.border}; --book-accent: ${pal.accent};">
-          <div>
-            <div class="card-front-top">
-              <div class="card-cover-slot" onclick="openBookModal('${escapeHtml(b.id)}')">
-                ${renderBookCover(b, 'medium')}
-              </div>
-              <div class="card-front-info">
-                <div class="card-front-header">
-                  <h3 class="book-title" onclick="openBookModal('${escapeHtml(b.id)}')">${escapeHtml(b.title)}</h3>
-                  <div class="book-author">by <strong style="color: #cbd5e1;">${escapeHtml(b.author || 'Unknown')}</strong> &bull; <span style="color: var(--text-muted); font-size: 0.8rem;">${escapeHtml(b.pub_date || '')}</span></div>
-                </div>
-                
-                <div class="card-front-badges">
-                  <span class="sim-score-badge" style="background: ${pal.tint}; border-color: ${pal.border}; color: #ffffff;">${simPercent}% Match</span>
-                  <span class="rating-badge">${renderIcon('star', 'gold-star')} ${ratingVal}★ <span style="opacity: 0.8; font-size: 0.68rem;">(${reviewsCount})</span></span>
-                  <span class="popularity-badge">${renderIcon(pop.icon || 'sparkles', 'badge-icon')} ${escapeHtml(pop.label || pop.tier)}</span>
-                </div>
-
-                <div class="genre-tags" style="margin-top: 0.35rem;">${genresHtml}</div>
-                ${matchedAspectsHtml ? `<div class="narrative-dna-strip" style="margin-top: 0.2rem;">${matchedAspectsHtml}</div>` : ''}
-              </div>
-            </div>
-
-            ${influenceHtml}
-            <p class="book-summary-brief" title="${escapeHtml(b.summary)}" onclick="openBookModal('${escapeHtml(b.id)}')">${escapeHtml(b.summary)}</p>
+        <!-- FRONT FACE: PURE CLEAN POSTER (CLICK TO FLIP) -->
+        <div class="book-card-face book-card-front" style="--book-border: ${pal.border};" onclick="toggleCardFlip('${escapeHtml(b.id)}')" title="Click card to flip for vector decomposition">
+          <div class="card-poster-art">
+            ${renderBookCover(b, 'medium')}
+          </div>
+          
+          <div class="card-top-floating-badge" style="border-color: ${pal.border}; color: ${pal.primary};">
+            ${simPercent}% Match
           </div>
 
-          <div class="card-front-footer">
-            <button class="card-flip-trigger-btn" onclick="toggleCardFlip('${escapeHtml(b.id)}', event)">
-              ${renderIcon('sliders')}
-              <span>Decomposition & DNA</span>
-              ${renderIcon('rotate-cw', 'flip-icon-spin')}
-            </button>
-            <button class="btn-similar-compact" onclick="addBookToHistory({id: '${escapeHtml(b.id)}', title: '${escapeHtml(b.title).replace(/'/g, "\\'")}', author: '${escapeHtml(b.author || '').replace(/'/g, "\\'")}', genres: '${escapeHtml(b.genres || '').replace(/'/g, "\\'")}'})">
-              <span>Add to Shelf</span>
-              ${renderIcon('plus')}
-            </button>
+          <div class="card-bottom-scrim">
+            <h4 class="card-poster-title">${escapeHtml(b.title)}</h4>
+            <div class="card-poster-meta">
+              <span class="card-poster-author">by ${escapeHtml(b.author || 'Unknown')}</span>
+              <span class="card-poster-rating">${renderIcon('star', 'gold-star')} ${pop.rating}★</span>
+            </div>
           </div>
         </div>
 
-        <!-- BACK FACE -->
-        <div class="book-card-face book-card-back" style="--book-tint: ${pal.tint}; --book-border: ${pal.border}; --book-accent: ${pal.accent};">
-          <div>
+        <!-- BACK FACE: DECOMPOSITION & ACTIONS (ZERO SCROLLBAR) -->
+        <div class="book-card-face book-card-back" style="--book-border: ${pal.border};">
+          <div class="card-back-main">
             <div class="card-back-header">
-              <div class="card-back-title-group">
-                <span class="card-back-pretitle">Profile Vector Alignment</span>
-                <h4 class="card-back-book-title">${escapeHtml(b.title)}</h4>
+              <div style="min-width: 0; flex: 1;">
+                <h4 class="card-back-title" title="${escapeHtml(b.title)}">${escapeHtml(b.title)}</h4>
+                <div class="card-back-author">by ${escapeHtml(b.author || 'Unknown')}</div>
               </div>
-              <button class="card-flip-back-btn" onclick="toggleCardFlip('${escapeHtml(b.id)}', event)" title="Flip back to front">
+              <button class="card-back-flip-btn" onclick="toggleCardFlip('${escapeHtml(b.id)}', event)" title="Flip back to cover">
                 ${renderIcon('rotate-ccw')}
-                <span>Flip Front</span>
               </button>
             </div>
 
             ${breakdownHtml}
+
             ${influenceHtml}
           </div>
-
+          
           <div class="card-back-footer">
             <button class="action-btn action-btn-subtle" onclick="openBookModal('${escapeHtml(b.id)}')">
-              ${renderIcon('bar-chart')} Deep Analysis
+              ${renderIcon('book-open')} Deep Analysis
             </button>
-            <button class="btn-similar" onclick="addBookToHistory({id: '${escapeHtml(b.id)}', title: '${escapeHtml(b.title).replace(/'/g, "\\'")}', author: '${escapeHtml(b.author || '').replace(/'/g, "\\'")}', genres: '${escapeHtml(b.genres || '').replace(/'/g, "\\'")}'})">
-              <span>Add to Shelf</span>
-              ${renderIcon('plus')}
+            <button class="action-btn btn-search-primary" onclick="addBookToHistory({id: '${escapeHtml(b.id)}', title: '${escapeHtml(b.title).replace(/'/g, "\\'")}', author: '${escapeHtml(b.author || '').replace(/'/g, "\\'")}', genres: '${escapeHtml(b.genres || '').replace(/'/g, "\\'")}'})">
+              <span>+ Add to Shelf</span>
             </button>
           </div>
         </div>
       </div>
     `;
-
     container.appendChild(cardWrap);
   });
 }

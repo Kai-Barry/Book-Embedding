@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/styles.css?v=8">
+  <link rel="stylesheet" href="/static/styles.css?v=13">
   <!-- Lucide Vector Icons Library -->
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -186,7 +186,7 @@
       <div id="profile-mode-container" style="display: none;">
         <section class="step-card step-card-active">
           <div class="step-header">
-            <div class="step-badge" style="background: linear-gradient(135deg, #0284c7, #38bdf8); color:#07090e;">Taste DNA</div>
+            <div class="step-badge">Taste DNA</div>
             <div>
               <h2 class="step-title">Multi-Book Reading History Synthesizer</h2>
               <p class="step-subtitle">Curate your personal reading history, rank favorite works (1–5★), and highlight key narrative aspects to synthesize multi-vector recommendations</p>
@@ -203,7 +203,7 @@
             <button class="preset-chip" onclick="loadStarterProfile('gothic')">Dark Gothic & Dread</button>
             <button class="preset-chip" onclick="loadStarterProfile('fantasy')">Epic Fantasy & Lore</button>
             <button class="preset-chip" onclick="loadStarterProfile('thriller')">Psychological Thrillers</button>
-            <button class="preset-chip" style="border-color: rgba(244, 63, 94, 0.4); color: #fda4af;" onclick="clearProfileHistory()">Clear Shelf</button>
+            <button class="preset-chip" style="border-color: #fca5a5; color: var(--accent-crimson);" onclick="clearProfileHistory()">Clear Shelf</button>
           </div>
 
           <!-- Search & Add to Shelf -->
@@ -236,7 +236,7 @@
           <!-- Bookshelf Grid Container -->
           <div style="margin-top: 1.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
-              <h3 style="font-family: var(--font-serif); font-size: 1.15rem; color: #ffffff; display: flex; align-items: center; gap: 0.5rem;">
+              <h3 style="font-family: var(--font-serif); font-size: 1.2rem; font-weight: 700; color: var(--accent-leather); display: flex; align-items: center; gap: 0.5rem;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="gold-icon"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/></svg>
                 <span>Your Reading Bookshelf (<span id="shelf-count">0</span> books)</span>
               </h3>
@@ -286,6 +286,6 @@
     </div>
   </div>
 
-  <script src="/static/app.js?v=8"></script>
+  <script src="/static/app.js?v=13"></script>
 </body>
 </html>

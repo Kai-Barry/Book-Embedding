@@ -511,6 +511,7 @@ class BookRecommender:
         results = []
         for idx in all_candidates[:limit]:
             row = df.iloc[idx]
+            motifs = self.extract_subclustered_motifs(str(row.get("summary", "")), str(row.get("genres", "")))
             results.append({
                 "id": str(row["id"]),
                 "title": str(row["title"]),
@@ -518,6 +519,9 @@ class BookRecommender:
                 "genres": str(row["genres"]),
                 "pub_date": str(row["pub_date"]),
                 "summary": str(row["summary"]),
+                "cover_id": row.get("cover_id") if "cover_id" in row else None,
+                "cover_url": row.get("cover_url") if "cover_url" in row else None,
+                "subclustered_motifs": motifs,
                 "is_dynamic": False
             })
 
@@ -652,6 +656,11 @@ class BookRecommender:
         history_aspect_counts = {}
 
         ASPECT_KEYWORD_MAP = {
+            "plot_premise": ["plot", "premise", "story", "twist", "mystery", "conspiracy", "betrayal", "secrets", "conflict", "quest", "event", "journey"],
+            "prose_craft": ["prose", "lyrical", "literary", "writing", "poetic", "dense", "eloquent", "metaphor", "voice", "stylistic", "craft"],
+            "character_voice": ["character", "psychology", "protagonist", "introspective", "relationships", "emotional", "voice", "flawed", "human", "heart", "dialogue"],
+            "atmosphere_mood": ["atmosphere", "mood", "tone", "ambient", "dread", "dark", "eerie", "haunting", "bleak", "warm", "humor", "gothic", "noir", "immersive"],
+            "narrative_pacing": ["pacing", "propulsive", "velocity", "tension", "slow-burn", "fast", "urgent", "pulse", "action", "suspense", "rhythm"],
             "world_building": ["world", "setting", "universe", "planet", "civilization", "empire", "lore", "realm", "magic system", "future", "galaxy"],
             "philosophical": ["existential", "morality", "philosophy", "consciousness", "human nature", "ethics", "meaning", "reality", "truth", "fate", "death"],
             "plot_twists": ["twist", "mystery", "conspiracy", "betrayal", "secrets", "revelation", "turn", "suspense", "puzzle", "deception", "shock"],
