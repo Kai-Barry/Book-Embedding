@@ -21,12 +21,117 @@ const ICONS = {
   'compass': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>`,
   'arrow-right': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>`,
   'rotate-ccw': `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`,
+  'rotate-cw': `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>`,
   'plus': `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
-  'lightbulb': `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5"/></svg>`
+  'lightbulb': `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5"/></svg>`,
+  'tag': `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><circle cx="7" cy="7" r=".5" fill="currentColor"/></svg>`,
+  'layers': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.9a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 12.5-8.58 3.9a2 2 0 0 1-1.66 0L2 12.5"/><path d="m22 17.5-8.58 3.9a2 2 0 0 1-1.66 0L2 17.5"/></svg>`
 };
 
 function renderIcon(name, extraClass = '') {
   return ICONS[name] ? `<span class="svg-icon-wrap ${extraClass}">${ICONS[name]}</span>` : '';
+}
+
+// ----------------- STRIPE PRESS PALETTES & BOOK COVER ENGINE -----------------
+const STRIPE_PRESS_PALETTES = [
+  { id: 'terracotta', name: 'Terracotta & Ochre', primary: '#8a2510', secondary: '#c2410c', accent: '#ea580c', tint: 'rgba(234, 88, 12, 0.14)', border: 'rgba(234, 88, 12, 0.45)', foil: '#fed7aa', pattern: 'diagonal-stripes' },
+  { id: 'cobalt', name: 'Royal Cobalt & Sapphire', primary: '#0f2b46', secondary: '#1d4ed8', accent: '#3b82f6', tint: 'rgba(59, 130, 246, 0.14)', border: 'rgba(59, 130, 246, 0.45)', foil: '#bfdbfe', pattern: 'concentric-circles' },
+  { id: 'emerald', name: 'Imperial Emerald & Sage', primary: '#064e3b', secondary: '#047857', accent: '#10b981', tint: 'rgba(16, 185, 129, 0.14)', border: 'rgba(16, 185, 129, 0.45)', foil: '#a7f3d0', pattern: 'geometric-grid' },
+  { id: 'amber', name: 'Sunken Amber & Topaz', primary: '#78350f', secondary: '#b45309', accent: '#f59e0b', tint: 'rgba(245, 158, 11, 0.14)', border: 'rgba(245, 158, 11, 0.45)', foil: '#fde68a', pattern: 'horizontal-bars' },
+  { id: 'plum', name: 'Velvet Plum & Amethyst', primary: '#4c1d95', secondary: '#6d28d9', accent: '#8b5cf6', tint: 'rgba(139, 92, 246, 0.14)', border: 'rgba(139, 92, 246, 0.45)', foil: '#ddd6fe', pattern: 'overlapping-rings' },
+  { id: 'crimson', name: 'Oxblood & Deep Crimson', primary: '#881337', secondary: '#be123c', accent: '#f43f5e', tint: 'rgba(244, 63, 94, 0.14)', border: 'rgba(244, 63, 94, 0.45)', foil: '#fecdd3', pattern: 'diagonal-hatch' },
+  { id: 'cyan-slate', name: 'Abyssal Cyan & Slate', primary: '#0e3a47', secondary: '#0891b2', accent: '#06b6d4', tint: 'rgba(6, 182, 212, 0.14)', border: 'rgba(6, 182, 212, 0.45)', foil: '#a5f3fc', pattern: 'radial-rays' },
+  { id: 'bronze-sand', name: 'Dune Bronze & Sand', primary: '#451a03', secondary: '#92400e', accent: '#d97706', tint: 'rgba(217, 119, 6, 0.14)', border: 'rgba(217, 119, 6, 0.45)', foil: '#fef3c7', pattern: 'chevron-lines' },
+  { id: 'forest-moss', name: 'Ancient Forest & Jade', primary: '#143621', secondary: '#15803d', accent: '#22c55e', tint: 'rgba(34, 197, 94, 0.14)', border: 'rgba(34, 197, 94, 0.45)', foil: '#bbf7d0', pattern: 'diamond-mesh' },
+  { id: 'indigo-midnight', name: 'Cosmic Indigo & Obsidian', primary: '#1e1b4b', secondary: '#3730a3', accent: '#6366f1', tint: 'rgba(99, 102, 241, 0.14)', border: 'rgba(99, 102, 241, 0.45)', foil: '#c7d2fe', pattern: 'cross-hatch' },
+  { id: 'ochre-gold', name: 'Archival Gold & Ochre', primary: '#583204', secondary: '#a16207', accent: '#eab308', tint: 'rgba(234, 179, 8, 0.14)', border: 'rgba(234, 179, 8, 0.45)', foil: '#fef08a', pattern: 'archival-rules' },
+  { id: 'rosewood', name: 'Rosewood & Garnet', primary: '#541328', secondary: '#9f1239', accent: '#e11d48', tint: 'rgba(225, 29, 72, 0.14)', border: 'rgba(225, 29, 72, 0.45)', foil: '#ffe4e6', pattern: 'minimalist-triangles' }
+];
+
+function getBookPalette(book) {
+  if (!book) return STRIPE_PRESS_PALETTES[0];
+  const str = String(book.id || book.title || '') + String(book.author || '');
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 31 + str.charCodeAt(i)) & 0xffffffff;
+  }
+  const index = Math.abs(hash) % STRIPE_PRESS_PALETTES.length;
+  return STRIPE_PRESS_PALETTES[index];
+}
+
+function getBookPatternSvg(pattern, foilColor) {
+  switch (pattern) {
+    case 'diagonal-stripes':
+      return `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" class="stripe-pattern-svg"><line x1="0" y1="0" x2="100%" y2="100%" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.18"/><line x1="0" y1="50%" x2="50%" y2="100%" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.18"/><line x1="50%" y1="0" x2="100%" y2="50%" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.18"/></svg>`;
+    case 'concentric-circles':
+      return `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" class="stripe-pattern-svg"><circle cx="50%" cy="50%" r="20%" fill="none" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/><circle cx="50%" cy="50%" r="38%" fill="none" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/><circle cx="50%" cy="50%" r="56%" fill="none" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.15"/></svg>`;
+    case 'geometric-grid':
+      return `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" class="stripe-pattern-svg"><rect x="15%" y="20%" width="70%" height="60%" fill="none" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/><rect x="25%" y="30%" width="50%" height="40%" fill="none" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/></svg>`;
+    case 'horizontal-bars':
+      return `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" class="stripe-pattern-svg"><line x1="10%" y1="30%" x2="90%" y2="30%" stroke="${foilColor}" stroke-width="2" stroke-opacity="0.25"/><line x1="20%" y1="45%" x2="80%" y2="45%" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/><line x1="10%" y1="60%" x2="90%" y2="60%" stroke="${foilColor}" stroke-width="2" stroke-opacity="0.25"/></svg>`;
+    case 'overlapping-rings':
+      return `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" class="stripe-pattern-svg"><circle cx="35%" cy="50%" r="30%" fill="none" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/><circle cx="65%" cy="50%" r="30%" fill="none" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/></svg>`;
+    case 'radial-rays':
+      return `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" class="stripe-pattern-svg"><circle cx="50%" cy="40%" r="6" fill="${foilColor}" fill-opacity="0.3"/><line x1="50%" y1="15%" x2="50%" y2="65%" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/><line x1="25%" y1="40%" x2="75%" y2="40%" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/><line x1="32%" y1="22%" x2="68%" y2="58%" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/></svg>`;
+    default:
+      return `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" class="stripe-pattern-svg"><rect x="12%" y="15%" width="76%" height="70%" fill="none" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.25"/><line x1="12%" y1="35%" x2="88%" y2="35%" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/></svg>`;
+  }
+}
+
+function renderBookCover(book, size = 'medium') {
+  if (!book) return '';
+  const pal = getBookPalette(book);
+  const title = escapeHtml(book.title || 'Untitled Book');
+  const author = escapeHtml(book.author || 'Author');
+  const patternSvg = getBookPatternSvg(pal.pattern, pal.foil);
+  
+  // High-resolution or medium cover source
+  let coverSrc = book.cover_url || '';
+  if (!coverSrc && book.cover_id) {
+    coverSrc = `https://covers.openlibrary.org/b/id/${book.cover_id}-M.jpg`;
+  }
+
+  const hasImage = Boolean(coverSrc);
+
+  return `
+    <div class="book-cover-3d size-${size}" style="--pal-primary: ${pal.primary}; --pal-secondary: ${pal.secondary}; --pal-accent: ${pal.accent}; --pal-foil: ${pal.foil};">
+      <div class="book-spine-lighting"></div>
+      ${hasImage ? `
+        <img 
+          src="${escapeHtml(coverSrc)}" 
+          alt="${title}" 
+          class="book-cover-img" 
+          loading="lazy"
+          onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"
+        />
+      ` : ''}
+      <div class="book-cover-fallback" style="${hasImage ? 'display: none;' : 'display: flex;'}">
+        <div class="stripe-jacket-pattern">${patternSvg}</div>
+        <div class="stripe-jacket-content">
+          <div class="stripe-jacket-publisher">LIBRARIS PRESS</div>
+          <div class="stripe-jacket-title-wrap">
+            <h4 class="stripe-jacket-title">${title}</h4>
+            <div class="stripe-jacket-author">${author}</div>
+          </div>
+          <div class="stripe-jacket-colophon">
+            <span>FIRST ED.</span>
+            <span class="stripe-jacket-rule"></span>
+            <span>${escapeHtml((book.genres || 'LIT').split(',')[0].trim().toUpperCase())}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function toggleCardFlip(bookId, event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  const inner = document.getElementById(`card-inner-${bookId}`);
+  if (inner) {
+    inner.classList.toggle('is-flipped');
+  }
 }
 
 // 2D Galaxy State & Spatial Index for 60fps Performance with 25,000+ points
@@ -102,7 +207,7 @@ function toggleFocusConstellation() {
   focusConstellationOnly = !focusConstellationOnly;
   const btn = document.getElementById('btn-focus-constellation');
   if (btn) {
-    btn.textContent = focusConstellationOnly ? '✨ Constellation Isolated' : '🌌 Highlighting Mode';
+    btn.innerHTML = focusConstellationOnly ? `${renderIcon('sparkles')} Constellation Isolated` : `${renderIcon('orbit')} Highlighting Mode`;
     btn.style.background = focusConstellationOnly ? 'rgba(6, 182, 212, 0.3)' : 'rgba(6, 182, 212, 0.15)';
   }
   requestGalaxyDraw();
@@ -185,7 +290,7 @@ function onWeightSliderChange(weightKey, val) {
   const btn = document.getElementById('btn-apply-tuning');
   if (btn) {
     btn.classList.add('pending-changes');
-    btn.textContent = '⚡ Apply Weights & Re-Search Vectors';
+    btn.innerHTML = `${renderIcon('zap')} Apply Weights & Re-Search Vectors`;
   }
 }
 
@@ -238,7 +343,7 @@ function applyTuningPreset(presetId) {
   const btn = document.getElementById('btn-apply-tuning');
   if (btn) {
     btn.classList.add('pending-changes');
-    btn.textContent = '⚡ Apply Weights & Re-Search Vectors';
+    btn.innerHTML = `${renderIcon('zap')} Apply Weights & Re-Search Vectors`;
   }
 }
 
@@ -291,7 +396,7 @@ function removeActiveMotif(keyword) {
   const btn = document.getElementById('btn-apply-tuning');
   if (btn) {
     btn.classList.add('pending-changes');
-    btn.textContent = '⚡ Apply Weights & Re-Search Vectors';
+    btn.innerHTML = `${renderIcon('zap')} Apply Weights & Re-Search Vectors`;
   }
 }
 
@@ -304,7 +409,7 @@ function clearAllActiveMotifs() {
   const btn = document.getElementById('btn-apply-tuning');
   if (btn) {
     btn.classList.add('pending-changes');
-    btn.textContent = '⚡ Apply Weights & Re-Search Vectors';
+    btn.innerHTML = `${renderIcon('zap')} Apply Weights & Re-Search Vectors`;
   }
 }
 
@@ -348,7 +453,7 @@ function submitInlineCustomTrope() {
   const btn = document.getElementById('btn-apply-tuning');
   if (btn) {
     btn.classList.add('pending-changes');
-    btn.textContent = '⚡ Apply Weights & Re-Search Vectors';
+    btn.innerHTML = `${renderIcon('zap')} Apply Weights & Re-Search Vectors`;
   }
 }
 
@@ -366,7 +471,7 @@ function renderCustomMotifsCategoryCard() {
     return `
       <span class="concept-pill ${info.class}" data-keyword="${escapeHtml(kw)}" onclick="cycleMotifState('${escapeHtml(kw)}')">
         <span>${info.icon}</span>
-        <span>✨ ${escapeHtml(kw)}</span>
+        <span>${escapeHtml(kw)}</span>
         ${info.tag ? `<span class="pill-badge-tag">${info.tag}</span>` : ''}
       </span>
     `;
@@ -398,7 +503,7 @@ function cycleMotifState(keyword) {
   const btn = document.getElementById('btn-apply-tuning');
   if (btn) {
     btn.classList.add('pending-changes');
-    btn.textContent = '⚡ Apply Weights & Re-Search Vectors';
+    btn.innerHTML = `${renderIcon('zap')} Apply Weights & Re-Search Vectors`;
   }
 }
 
@@ -435,7 +540,7 @@ function resetTuningDefaults() {
   const btn = document.getElementById('btn-apply-tuning');
   if (btn) {
     btn.classList.add('pending-changes');
-    btn.textContent = '⚡ Apply Weights & Re-Search Vectors';
+    btn.innerHTML = `${renderIcon('zap')} Apply Weights & Re-Search Vectors`;
   }
 }
 
@@ -464,9 +569,9 @@ function applyTuningSearch() {
   const btn = document.getElementById('btn-apply-tuning');
   if (btn) {
     btn.classList.remove('pending-changes');
-    btn.textContent = '✅ Weights Applied';
+    btn.innerHTML = `${renderIcon('sparkles')} Weights Applied`;
     setTimeout(() => {
-      if (btn) btn.textContent = '🔍 Apply Weights & Re-Search';
+      if (btn) btn.innerHTML = `${renderIcon('sliders')} Apply Weights & Re-Search`;
     }, 2000);
   }
   if (currentTargetId) {
@@ -621,29 +726,40 @@ async function openBookModal(bookId) {
       `;
     }
 
-    content.innerHTML = `
-      <div style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 1.2rem; margin-bottom: 1.5rem;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
-          <span class="spotlight-anchor-tag">${renderIcon('book-open')} Literary Analysis & Decomposition</span>
-          ${book.series_info ? `<span class="series-badge">${renderIcon('library')} ${escapeHtml(book.series_info.full_tag)}</span>` : ''}
-        </div>
-        <h2 style="font-size: 1.8rem; font-weight: 800; font-family: 'Playfair Display', serif; color: #fff; margin: 0.5rem 0 0.2rem 0;">${escapeHtml(book.title)}</h2>
-        <div style="font-size: 1.05rem; color: var(--text-secondary);">
-          by <strong style="color: #e5a93c;">${escapeHtml(book.author || 'Unknown')}</strong> &bull; 
-          <span style="color: var(--text-muted);">${escapeHtml(book.pub_date || 'N/A')}</span>
-        </div>
+    const pal = getBookPalette(book);
+    const modalCard = overlay.querySelector('.modal-card');
+    if (modalCard) {
+      modalCard.style.setProperty('--modal-border', pal.border);
+      modalCard.style.setProperty('--modal-tint', pal.tint);
+    }
 
-        <div class="book-metadata-row" style="margin-top: 0.8rem;">
-          <span class="rating-badge">${renderIcon('star', 'gold-star')} ${pop.rating}★ <span style="opacity: 0.85; font-size: 0.68rem;">(${Number(pop.ratings_count).toLocaleString()} reviews)</span></span>
-          <span class="popularity-badge">${renderIcon('flame', 'flame-icon')} ${pop.label}</span>
-          ${book.readability ? `<span class="readability-badge" title="Flesch Reading Ease score: ${book.readability.score}">${renderIcon('book-open')} ${escapeHtml(book.readability.label)}</span>` : ''}
+    content.innerHTML = `
+      <div class="modal-hero-layout" style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 1.4rem; margin-bottom: 1.5rem;">
+        <div class="modal-cover-slot">
+          ${renderBookCover(book, 'large')}
         </div>
-        <div style="font-size: 0.76rem; color: #94a3b8; margin-top: 0.3rem;">${escapeHtml(pop.description)}</div>
+        <div class="modal-info-slot">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+            <span class="spotlight-anchor-tag">${renderIcon('book-open')} Literary Analysis & Decomposition</span>
+            ${book.series_info ? `<span class="series-badge">${renderIcon('library')} ${escapeHtml(book.series_info.full_tag)}</span>` : ''}
+          </div>
+          <h2 style="font-size: 1.8rem; font-weight: 800; font-family: var(--font-serif); color: #fff; margin: 0.4rem 0 0.2rem 0;">${escapeHtml(book.title)}</h2>
+          <div style="font-size: 1rem; color: var(--text-secondary);">
+            by <strong style="color: ${pal.foil};">${escapeHtml(book.author || 'Unknown')}</strong> &bull; 
+            <span style="color: var(--text-muted);">${escapeHtml(book.pub_date || 'N/A')}</span>
+          </div>
+
+          <div class="book-metadata-row" style="margin-top: 0.6rem;">
+            <span class="rating-badge">${renderIcon('star', 'gold-star')} ${pop.rating}★ <span style="opacity: 0.85; font-size: 0.68rem;">(${Number(pop.ratings_count).toLocaleString()} reviews)</span></span>
+            <span class="popularity-badge">${renderIcon(pop.icon || 'sparkles', 'badge-icon')} ${pop.label}</span>
+            ${book.readability ? `<span class="readability-badge" title="Flesch Reading Ease score: ${book.readability.score}">${renderIcon('book-open')} ${escapeHtml(book.readability.label)}</span>` : ''}
+          </div>
+          <div style="font-size: 0.76rem; color: #94a3b8; margin-top: 0.3rem;">${escapeHtml(pop.description)}</div>
+          <div class="genre-tags" style="margin-top: 0.5rem;">${genresHtml}</div>
+        </div>
       </div>
 
       ${comparisonGraphHtml}
-
-      <div class="genre-tags" style="margin-bottom: 1.2rem;">${genresHtml}</div>
 
       <!-- Narrative Mechanics & Stylistic Profile Matrix -->
       <div class="style-badge-grid">
@@ -952,39 +1068,50 @@ function renderTargetSpotlight(targetBook, subclusteredMotifs = {}) {
 
   const activeCount = Array.from(motifStates.values()).filter(s => s !== 'neutral').length;
 
+  const pal = getBookPalette(targetBook);
+  spotlightCard.style.setProperty('--spotlight-border', pal.border);
+  spotlightCard.style.setProperty('--spotlight-tint', pal.tint);
+
   spotlightCard.innerHTML = `
     <!-- Top Target Book Hero Strip -->
-    <div class="spotlight-header">
-      <div>
-        <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
-          <span class="spotlight-anchor-tag">${renderIcon('star', 'gold-icon')} Anchor Literature</span>
-          ${targetBook.series_info ? `<span class="series-badge">${renderIcon('library')} ${escapeHtml(targetBook.series_info.full_tag)}</span>` : ''}
-        </div>
-        <h2 style="font-size: 1.6rem; font-weight: 800; font-family: 'Playfair Display', serif; color: #ffffff; margin-top: 0.4rem; cursor: pointer;" onclick="openBookModal('${escapeHtml(targetBook.id)}')">${escapeHtml(targetBook.title)}</h2>
-        <div style="font-size: 1rem; color: var(--text-secondary); margin-top: 0.2rem;">
-          by <strong style="color: #e5a93c;">${escapeHtml(targetBook.author || 'Unknown')}</strong> &bull; 
-          <span style="color: var(--text-muted);">${escapeHtml(targetBook.pub_date || '')}</span>
-        </div>
-        <div class="book-metadata-row" style="margin-top: 0.5rem;">
-          ${targetBook.community_rating ? `<span class="rating-badge">${renderIcon('star', 'gold-star')} ${targetBook.community_rating}★ ${targetBook.ratings_count ? `<span style="opacity: 0.85; font-size: 0.68rem;">(${Number(targetBook.ratings_count).toLocaleString()})</span>` : ''}</span>` : ''}
-          ${targetBook.popularity ? `<span class="popularity-badge">${renderIcon('flame', 'flame-icon')} ${targetBook.popularity.label}</span>` : ''}
-          ${targetBook.readability ? `<span class="readability-badge">${renderIcon('book-open')} Reading Ease: ${escapeHtml(targetBook.readability.label)}</span>` : ''}
-        </div>
+    <div class="spotlight-hero-layout">
+      <div class="spotlight-cover-slot" onclick="openBookModal('${escapeHtml(targetBook.id)}')">
+        ${renderBookCover(targetBook, 'large')}
       </div>
-      <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
-        <button class="action-btn bolster-btn" onclick="bolsterBookLive('${escapeHtml(targetBook.id)}')">
-          ${renderIcon('globe')} Bolster via Web
-        </button>
-        <button class="action-btn action-btn-subtle" onclick="openBookModal('${escapeHtml(targetBook.id)}')">
-          ${renderIcon('book-open')} View Full Analysis
-        </button>
-        <button class="action-btn apply-tuning-btn pending-changes" onclick="handleBookSimilarSearch(currentTargetId)">
-          ${renderIcon('zap')} Synthesize Vector Search ➔
-        </button>
+      <div class="spotlight-info-slot">
+        <div class="spotlight-header">
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+              <span class="spotlight-anchor-tag">${renderIcon('star', 'gold-icon')} Anchor Literature</span>
+              ${targetBook.series_info ? `<span class="series-badge">${renderIcon('library')} ${escapeHtml(targetBook.series_info.full_tag)}</span>` : ''}
+            </div>
+            <h2 style="font-size: 1.65rem; font-weight: 800; font-family: var(--font-serif); color: #ffffff; margin-top: 0.4rem; cursor: pointer;" onclick="openBookModal('${escapeHtml(targetBook.id)}')">${escapeHtml(targetBook.title)}</h2>
+            <div style="font-size: 0.95rem; color: var(--text-secondary); margin-top: 0.2rem;">
+              by <strong style="color: ${pal.foil};">${escapeHtml(targetBook.author || 'Unknown')}</strong> &bull; 
+              <span style="color: var(--text-muted);">${escapeHtml(targetBook.pub_date || '')}</span>
+            </div>
+            <div class="book-metadata-row" style="margin-top: 0.5rem;">
+              ${targetBook.community_rating ? `<span class="rating-badge">${renderIcon('star', 'gold-star')} ${targetBook.community_rating}★ ${targetBook.ratings_count ? `<span style="opacity: 0.85; font-size: 0.68rem;">(${Number(targetBook.ratings_count).toLocaleString()})</span>` : ''}</span>` : ''}
+              ${targetBook.popularity ? `<span class="popularity-badge">${renderIcon(targetBook.popularity.icon || 'sparkles', 'flame-icon')} ${targetBook.popularity.label}</span>` : ''}
+              ${targetBook.readability ? `<span class="readability-badge">${renderIcon('book-open')} ${escapeHtml(targetBook.readability.label)}</span>` : ''}
+            </div>
+          </div>
+          <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+            <button class="action-btn bolster-btn" onclick="bolsterBookLive('${escapeHtml(targetBook.id)}')">
+              ${renderIcon('globe')} Bolster via Web
+            </button>
+            <button class="action-btn action-btn-subtle" onclick="openBookModal('${escapeHtml(targetBook.id)}')">
+              ${renderIcon('book-open')} View Full Analysis
+            </button>
+            <button class="action-btn apply-tuning-btn pending-changes" onclick="handleBookSimilarSearch(currentTargetId)">
+              ${renderIcon('zap')} Synthesize Vector Search ➔
+            </button>
+          </div>
+        </div>
+        <div class="genre-tags" style="margin-top: 0.4rem;">${genres}</div>
+        <p style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.6; margin: 0.4rem 0; background: rgba(0,0,0,0.25); padding: 0.75rem 0.95rem; border-radius: var(--radius-sm); border-left: 3.5px solid ${pal.accent};">${escapeHtml(targetBook.summary)}</p>
       </div>
     </div>
-    <div class="genre-tags">${genres}</div>
-    <p style="font-size: 0.92rem; color: #cbd5e1; line-height: 1.6; margin: 0.5rem 0; background: rgba(0,0,0,0.25); padding: 0.8rem 1rem; border-radius: var(--radius-sm); border-left: 3px solid #e5a93c;">${escapeHtml(targetBook.summary)}</p>
 
     <!-- Vector Tuning Studio -->
     <div class="tuning-panel">
@@ -1151,9 +1278,9 @@ async function handleBookSimilarSearch(bookIdOrTitle) {
     const applyBtn = document.getElementById('btn-apply-tuning');
     if (applyBtn) {
       applyBtn.classList.remove('pending-changes');
-      applyBtn.textContent = '✅ Search Updated';
+      applyBtn.innerHTML = `${renderIcon('sparkles')} Search Updated`;
       setTimeout(() => {
-        if (applyBtn) applyBtn.textContent = '⚡ Run Vector Search & Discover Similar ➔';
+        if (applyBtn) applyBtn.innerHTML = `${renderIcon('zap')} Run Vector Search & Discover Similar ➔`;
       }, 2500);
     }
   } catch (err) {
@@ -1821,9 +1948,11 @@ function renderResults(books, title, latency, targetBook = null, conceptKeywords
   latencyEl.innerHTML = `${renderIcon('zap')} Vector Search & Manifold: <strong>${latency} ms</strong>`;
 
   filteredBooks.forEach(b => {
-    const card = document.createElement('div');
-    card.className = 'book-card';
-    
+    const cardWrap = document.createElement('div');
+    cardWrap.className = 'book-card-3d-wrap';
+    cardWrap.id = `card-wrap-${b.id}`;
+
+    const pal = getBookPalette(b);
     const scoreVal = b.weighted_score !== undefined ? b.weighted_score : b.similarity_score;
     const simPercent = scoreVal !== undefined ? Math.round(scoreVal * 100) : 85;
 
@@ -1856,7 +1985,18 @@ function renderResults(books, title, latency, targetBook = null, conceptKeywords
       audience_pct: Math.min(99, Math.max(40, Math.round((b.collaborative_affinity || 0.65) * 100)))
     };
 
-    // Explainability Reasons HTML
+    // Primary reason highlight for front face
+    let primaryHookHtml = '';
+    if (b.similarity_reasons && b.similarity_reasons.length > 0) {
+      primaryHookHtml = `
+        <div class="card-primary-hook" title="${escapeHtml(b.similarity_reasons[0])}">
+          ${renderIcon('lightbulb')}
+          <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(b.similarity_reasons[0])}</span>
+        </div>
+      `;
+    }
+
+    // Full Explainability Reasons for back face
     let reasonsHtml = '';
     if (b.similarity_reasons && b.similarity_reasons.length > 0) {
       const reasonPills = b.similarity_reasons
@@ -1871,12 +2011,10 @@ function renderResults(books, title, latency, targetBook = null, conceptKeywords
     }
 
     const metadataBadgesHtml = `
-      <div class="book-metadata-row">
-        ${b.series_info ? `<span class="series-badge">${renderIcon('library')} ${escapeHtml(b.series_info.full_tag)}</span>` : ''}
+      <div class="card-front-badges">
+        <span class="sim-score-badge" style="background: ${pal.tint}; border-color: ${pal.border}; color: #ffffff;">${simPercent}% Match</span>
         <span class="rating-badge">${renderIcon('star', 'gold-star')} ${pop.rating}★ <span style="opacity: 0.85; font-size: 0.68rem;">(${Number(pop.ratings_count).toLocaleString()})</span></span>
-        <span class="popularity-badge">${renderIcon('flame', 'flame-icon')} ${pop.label}</span>
-        ${b.readability ? `<span class="readability-badge">${renderIcon('book-open')} ${escapeHtml(b.readability.label)}</span>` : ''}
-        ${b.collaborative_affinity && b.collaborative_affinity >= 0.70 ? `<span class="collab-affinity-badge">${renderIcon('users')} ${Math.round(b.collaborative_affinity * 100)}% Audience Co-Taste</span>` : ''}
+        <span class="popularity-badge">${renderIcon(pop.icon || 'sparkles', 'badge-icon')} ${pop.label}</span>
       </div>
     `;
 
@@ -1884,7 +2022,7 @@ function renderResults(books, title, latency, targetBook = null, conceptKeywords
       <div class="match-breakdown-card">
         <div class="match-breakdown-header">
           <span>${renderIcon('bar-chart')} Vector Decomposition</span>
-          <span style="color: #e5a93c; font-weight: 800; font-family: monospace;">${simPercent}% Match</span>
+          <span style="color: var(--accent-gold); font-weight: 800; font-family: monospace;">${simPercent}% Match</span>
         </div>
         <div class="breakdown-bars-grid">
           <div class="breakdown-bar-item">
@@ -1935,33 +2073,72 @@ function renderResults(books, title, latency, targetBook = null, conceptKeywords
       </div>
     `;
 
-    card.innerHTML = `
-      <div>
-        <div class="card-top">
+    cardWrap.innerHTML = `
+      <div class="book-card-inner" id="card-inner-${escapeHtml(b.id)}">
+        <!-- FRONT FACE -->
+        <div class="book-card-face book-card-front" style="--book-tint: ${pal.tint}; --book-border: ${pal.border}; --book-accent: ${pal.accent};">
           <div>
-            <h3 class="book-title" style="cursor: pointer;" onclick="openBookModal('${escapeHtml(b.id)}')">${escapeHtml(b.title)}</h3>
-            <div class="book-author">by <strong style="color: #cbd5e1;">${escapeHtml(b.author || 'Unknown')}</strong> &bull; <span style="color: var(--text-muted); font-size: 0.8rem;">${escapeHtml(b.pub_date || '')}</span></div>
+            <div class="card-front-top">
+              <div class="card-cover-slot" onclick="openBookModal('${escapeHtml(b.id)}')">
+                ${renderBookCover(b, 'medium')}
+              </div>
+              <div class="card-front-info">
+                <div class="card-front-header">
+                  <h3 class="book-title" onclick="openBookModal('${escapeHtml(b.id)}')">${escapeHtml(b.title)}</h3>
+                  <div class="book-author">by <strong style="color: #cbd5e1;">${escapeHtml(b.author || 'Unknown')}</strong> &bull; <span style="color: var(--text-muted); font-size: 0.8rem;">${escapeHtml(b.pub_date || '')}</span></div>
+                </div>
+                ${metadataBadgesHtml}
+                <div class="genre-tags" style="margin-top: 0.35rem;">${genresHtml}</div>
+                ${primaryHookHtml}
+              </div>
+            </div>
+            <p class="book-summary-brief" title="${escapeHtml(b.summary)}" onclick="openBookModal('${escapeHtml(b.id)}')">${escapeHtml(b.summary)}</p>
           </div>
-          ${simPercent !== null ? `<div class="sim-score-badge">${simPercent}% Match</div>` : ''}
+          
+          <div class="card-front-footer">
+            <button class="card-flip-trigger-btn" onclick="toggleCardFlip('${escapeHtml(b.id)}', event)">
+              ${renderIcon('sliders')}
+              <span>Decomposition & DNA</span>
+              ${renderIcon('rotate-cw', 'flip-icon-spin')}
+            </button>
+            <button class="btn-similar-compact" onclick="exploreBook('${escapeHtml(b.id)}', '${escapeHtml(b.title).replace(/'/g, "\\'")}')" title="Explore from this book">
+              <span>Discover</span>
+              ${renderIcon('arrow-right')}
+            </button>
+          </div>
         </div>
-        ${metadataBadgesHtml}
-        ${matchBreakdownHtml}
-        ${dnaStripHtml}
-        <div class="genre-tags">${genresHtml}</div>
-        ${reasonsHtml}
-        <p class="book-summary" title="${escapeHtml(b.summary)}" style="cursor: pointer;" onclick="openBookModal('${escapeHtml(b.id)}')">${escapeHtml(b.summary)}</p>
-      </div>
-      <div class="card-footer" style="margin-top: 1rem;">
-        <button class="action-btn action-btn-subtle" onclick="openBookModal('${escapeHtml(b.id)}')">
-          ${renderIcon('bar-chart')} Deep Analysis
-        </button>
-        <button class="btn-similar" onclick="exploreBook('${escapeHtml(b.id)}', '${escapeHtml(b.title).replace(/'/g, "\\'")}')">
-          <span>Discover Similar</span>
-          ${renderIcon('arrow-right')}
-        </button>
+
+        <!-- BACK FACE -->
+        <div class="book-card-face book-card-back" style="--book-tint: ${pal.tint}; --book-border: ${pal.border}; --book-accent: ${pal.accent};">
+          <div>
+            <div class="card-back-header">
+              <div class="card-back-title-group">
+                <span class="card-back-pretitle">Neural Decomposition</span>
+                <h4 class="card-back-book-title">${escapeHtml(b.title)}</h4>
+              </div>
+              <button class="card-flip-back-btn" onclick="toggleCardFlip('${escapeHtml(b.id)}', event)" title="Flip back to front">
+                ${renderIcon('rotate-ccw')}
+                <span>Flip Front</span>
+              </button>
+            </div>
+            ${matchBreakdownHtml}
+            ${dnaStripHtml}
+            ${reasonsHtml}
+          </div>
+          
+          <div class="card-back-footer">
+            <button class="action-btn action-btn-subtle" onclick="openBookModal('${escapeHtml(b.id)}')">
+              ${renderIcon('bar-chart')} Deep Analysis
+            </button>
+            <button class="btn-similar" onclick="exploreBook('${escapeHtml(b.id)}', '${escapeHtml(b.title).replace(/'/g, "\\'")}')">
+              <span>Discover Similar</span>
+              ${renderIcon('arrow-right')}
+            </button>
+          </div>
+        </div>
       </div>
     `;
-    container.appendChild(card);
+    container.appendChild(cardWrap);
   });
 }
 
@@ -2238,16 +2415,17 @@ function renderBookshelf() {
   }
 
   container.innerHTML = profileHistory.map((item, idx) => {
+    const pal = getBookPalette(item);
     // Star rating buttons
     const starsHtml = [1, 2, 3, 4, 5].map(starVal => {
       const activeClass = starVal <= item.rating ? 'active-star' : '';
       return `<button class="star-btn ${activeClass}" onclick="setHistoryRating(${idx}, ${starVal})" title="Rank ${starVal} Stars">★</button>`;
     }).join('');
 
-    const ratingLabel = item.rating === 5 ? 'Loved (Strongest Weight)' :
+    const ratingLabel = item.rating === 5 ? 'Loved (Top Weight)' :
                         item.rating === 4 ? 'Liked' :
                         item.rating === 3 ? 'Neutral' :
-                        item.rating === 2 ? 'Disliked (Deprioritize)' : 'Hated (Exclude Traits)';
+                        item.rating === 2 ? 'Disliked' : 'Exclude Traits';
 
     // Aspect buttons
     const aspectsHtml = PROFILE_ASPECTS.map(asp => {
@@ -2261,31 +2439,36 @@ function renderBookshelf() {
     }).join('');
 
     return `
-      <div class="bookshelf-card">
-        <div class="shelf-card-header">
+      <div class="bookshelf-card" style="--shelf-accent: ${pal.accent}; --shelf-border: ${pal.border}; --shelf-tint: ${pal.tint};">
+        <div class="bookshelf-card-cover" onclick="openBookModal('${escapeHtml(item.id)}')">
+          ${renderBookCover(item, 'small')}
+        </div>
+        <div class="bookshelf-card-body">
+          <div class="shelf-card-header">
+            <div>
+              <h4 class="shelf-book-title" onclick="openBookModal('${escapeHtml(item.id)}')" style="cursor: pointer;">${escapeHtml(item.title)}</h4>
+              <div class="shelf-book-author">by <strong style="color: #cbd5e1;">${escapeHtml(item.author || 'Unknown')}</strong></div>
+            </div>
+            <button class="shelf-remove-btn" onclick="removeFromProfileHistory(${idx})" title="Remove from Shelf">✕</button>
+          </div>
+
           <div>
-            <h4 class="shelf-book-title">${escapeHtml(item.title)}</h4>
-            <div class="shelf-book-author">by ${escapeHtml(item.author || 'Unknown')}</div>
+            <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.2rem;">
+              Your Rating:
+            </div>
+            <div class="star-rating-group">
+              ${starsHtml}
+              <span class="rating-label-text">${item.rating}★ <span style="font-size: 0.68rem; opacity: 0.8;">(${ratingLabel})</span></span>
+            </div>
           </div>
-          <button class="shelf-remove-btn" onclick="removeFromProfileHistory(${idx})" title="Remove from Shelf">✕</button>
-        </div>
 
-        <div>
-          <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.25rem;">
-            Your Rating:
-          </div>
-          <div class="star-rating-group">
-            ${starsHtml}
-            <span class="rating-label-text">${item.rating}★ (${ratingLabel})</span>
-          </div>
-        </div>
-
-        <div>
-          <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.35rem;">
-            Key Highlight Qualities (Pick 1–2):
-          </div>
-          <div class="aspect-choice-strip">
-            ${aspectsHtml}
+          <div>
+            <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.3rem;">
+              Key Highlight Qualities:
+            </div>
+            <div class="aspect-choice-strip">
+              ${aspectsHtml}
+            </div>
           </div>
         </div>
       </div>
@@ -2301,56 +2484,43 @@ function updateTasteDNADashboardClient() {
   const aspectCounts = {};
   let ratingSum = 0;
 
+  if (profileHistory.length === 0) return;
+
   profileHistory.forEach(item => {
     ratingSum += item.rating;
-    item.liked_aspects.forEach(a => {
-      aspectCounts[a] = (aspectCounts[a] || 0) + (item.rating / 5.0);
+    (item.liked_aspects || []).forEach(a => {
+      aspectCounts[a] = (aspectCounts[a] || 0) + 1;
     });
-    if (item.genres) {
-      item.genres.split(',').forEach(g => {
-        const clean = g.trim();
-        if (clean && clean !== 'General') {
-          genreCounts[clean] = (genreCounts[clean] || 0) + (item.rating - 1.0);
-        }
-      });
-    }
+    const gList = (item.genres || '').split(',').map(g => g.trim()).filter(g => g && g !== 'General');
+    gList.forEach(g => {
+      genreCounts[g] = (genreCounts[g] || 0) + (item.rating - 1);
+    });
   });
 
-  const sortedGenres = Object.entries(genreCounts).sort((a, b) => b[1] - a[1]).slice(0, 4);
-  const totalGenreW = sortedGenres.reduce((acc, curr) => acc + curr[1], 0) || 1;
-  const topGenres = sortedGenres.map(([genre, count]) => ({
-    genre,
-    percentage: Math.round((count / totalGenreW) * 100)
-  }));
+  const totalGenreW = Object.values(genreCounts).reduce((a, b) => a + b, 0) || 1;
+  const topGenres = Object.entries(genreCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([genre, count]) => ({ genre, percentage: Math.round((count / totalGenreW) * 100) }));
 
-  const sortedAspects = Object.entries(aspectCounts).sort((a, b) => b[1] - a[1]).slice(0, 4);
-  const totalAspectW = sortedAspects.reduce((acc, curr) => acc + curr[1], 0) || 1;
-  const topAspects = sortedAspects.map(([aspect, count]) => ({
-    aspect,
-    percentage: Math.round((count / totalAspectW) * 100)
-  }));
+  const totalAspectW = Object.values(aspectCounts).reduce((a, b) => a + b, 0) || 1;
+  const topAspects = Object.entries(aspectCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([aspect, count]) => ({ aspect, percentage: Math.round((count / totalAspectW) * 100) }));
 
-  let archetype = "Eclectic Literary Connoisseur";
-  const dominantGenre = (topGenres[0]?.genre || '').toLowerCase();
-  const dominantAspect = topAspects[0]?.aspect || '';
-
-  if (dominantGenre.includes('science fiction') || dominantGenre.includes('speculative')) {
-    archetype = "Cosmic World-Builder & Futurist";
-  } else if (dominantGenre.includes('horror') || dominantGenre.includes('gothic') || dominantAspect.includes('dark_atmosphere')) {
-    archetype = "Atmospheric Dread & Dark Lore Devotee";
-  } else if (dominantGenre.includes('fantasy') || dominantAspect.includes('world_building')) {
-    archetype = "Epic Lore & High Magic Voyager";
-  } else if (dominantAspect.includes('philosophical')) {
-    archetype = "Philosophical & Psychological Inquirer";
-  } else if (dominantAspect.includes('fast_pacing') || dominantGenre.includes('thriller')) {
-    archetype = "High-Tension Propulsive Pacing Seeker";
-  } else if (dominantAspect.includes('prose_style')) {
-    archetype = "Lyrical Prose & Narrative Stylist";
+  let archetype = "Eclectic Literary Scout";
+  if (topGenres.length > 0) {
+    const g = topGenres[0].genre.toLowerCase();
+    if (g.includes('sci') || g.includes('speculative')) archetype = "Cosmic Cartographer";
+    else if (g.includes('horror') || g.includes('gothic')) archetype = "Nocturnal Scholar";
+    else if (g.includes('fantasy') || g.includes('myth')) archetype = "Mythic Worldbuilder";
+    else if (g.includes('thriller') || g.includes('mystery')) archetype = "Enigma Investigator";
   }
 
   renderTasteDNADashboard({
     total_books: profileHistory.length,
-    avg_rating: (ratingSum / (profileHistory.length || 1)).toFixed(1),
+    avg_rating: (ratingSum / profileHistory.length).toFixed(1),
     top_genres: topGenres,
     top_aspects: topAspects,
     taste_archetype: archetype
@@ -2456,7 +2626,7 @@ async function synthesizeProfileRecommendations() {
     gridEl.innerHTML = `<div style="grid-column: 1 / -1; color: #f43f5e; text-align: center;">Synthesis failed: ${escapeHtml(err.message)}</div>`;
   } finally {
     btn.innerHTML = `
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+      ${renderIcon('sparkles')}
       <span>Synthesize Multi-Book Recommendations ➔</span>
     `;
   }
@@ -2472,16 +2642,18 @@ function renderProfileResults(books, latency) {
   }
 
   books.forEach(b => {
-    const card = document.createElement('div');
-    card.className = 'book-card';
+    const cardWrap = document.createElement('div');
+    cardWrap.className = 'book-card-3d-wrap';
+    cardWrap.id = `card-wrap-${b.id}`;
 
-    const simPercent = b.weighted_score !== undefined ? Math.round(b.weighted_score * 100) : null;
+    const pal = getBookPalette(b);
+    const simPercent = b.weighted_score !== undefined ? Math.round(b.weighted_score * 100) : 85;
     const genres = (b.genres || '').split(',').map(g => g.trim()).filter(g => g && g !== 'General').slice(0, 3);
     const genresHtml = genres.map(g => `<span class="genre-tag">${escapeHtml(g)}</span>`).join('');
 
-    const pop = b.popularity || { tier: 'Acclaimed Read', icon: '✨', label: 'Acclaimed Read' };
-    const ratingVal = b.rating ? parseFloat(b.rating).toFixed(2) : '4.10';
-    const reviewsCount = b.ratings_count ? b.ratings_count.toLocaleString() : '1,250';
+    const pop = b.popularity || { tier: 'Acclaimed Read', icon: 'sparkles', label: 'Acclaimed Read' };
+    const ratingVal = b.rating ? parseFloat(b.rating).toFixed(2) : (b.community_rating || '4.10');
+    const reviewsCount = b.ratings_count ? Number(b.ratings_count).toLocaleString() : '1,250';
 
     // Influence Attribution Box
     let influenceHtml = '';
@@ -2507,7 +2679,7 @@ function renderProfileResults(books, latency) {
 
     // Matched aspects badges
     const matchedAspectsHtml = (b.matched_aspects || []).map(a => `
-      <span class="dna-pill" style="border-color: rgba(229, 169, 60, 0.4); color: var(--text-gold);">
+      <span class="dna-pill" style="border-color: ${pal.border}; color: ${pal.foil};">
         ${renderIcon('sparkles')} ${escapeHtml(a)}
       </span>
     `).join('');
@@ -2518,7 +2690,7 @@ function renderProfileResults(books, latency) {
       <div class="match-breakdown-card">
         <div class="match-breakdown-header">
           <span>${renderIcon('sliders')} Profile Alignment Vectors</span>
-          <span style="color: var(--accent-gold);">${simPercent}% Overall</span>
+          <span style="color: var(--accent-gold); font-weight: 800; font-family: monospace;">${simPercent}% Overall</span>
         </div>
         <div class="breakdown-bars-grid">
           <div class="breakdown-bar-item">
@@ -2541,46 +2713,80 @@ function renderProfileResults(books, latency) {
       </div>
     `;
 
-    card.innerHTML = `
-      <div>
-        <div class="card-top">
+    cardWrap.innerHTML = `
+      <div class="book-card-inner" id="card-inner-${escapeHtml(b.id)}">
+        <!-- FRONT FACE -->
+        <div class="book-card-face book-card-front" style="--book-tint: ${pal.tint}; --book-border: ${pal.border}; --book-accent: ${pal.accent};">
           <div>
-            <h3 class="book-title" style="cursor: pointer;" onclick="openBookModal('${escapeHtml(b.id)}')">${escapeHtml(b.title)}</h3>
-            <div class="book-author">by <strong style="color: #cbd5e1;">${escapeHtml(b.author || 'Unknown')}</strong> &bull; <span style="color: var(--text-muted); font-size: 0.8rem;">${escapeHtml(b.pub_date || '')}</span></div>
+            <div class="card-front-top">
+              <div class="card-cover-slot" onclick="openBookModal('${escapeHtml(b.id)}')">
+                ${renderBookCover(b, 'medium')}
+              </div>
+              <div class="card-front-info">
+                <div class="card-front-header">
+                  <h3 class="book-title" onclick="openBookModal('${escapeHtml(b.id)}')">${escapeHtml(b.title)}</h3>
+                  <div class="book-author">by <strong style="color: #cbd5e1;">${escapeHtml(b.author || 'Unknown')}</strong> &bull; <span style="color: var(--text-muted); font-size: 0.8rem;">${escapeHtml(b.pub_date || '')}</span></div>
+                </div>
+                
+                <div class="card-front-badges">
+                  <span class="sim-score-badge" style="background: ${pal.tint}; border-color: ${pal.border}; color: #ffffff;">${simPercent}% Match</span>
+                  <span class="rating-badge">${renderIcon('star', 'gold-star')} ${ratingVal}★ <span style="opacity: 0.8; font-size: 0.68rem;">(${reviewsCount})</span></span>
+                  <span class="popularity-badge">${renderIcon(pop.icon || 'sparkles', 'badge-icon')} ${escapeHtml(pop.label || pop.tier)}</span>
+                </div>
+
+                <div class="genre-tags" style="margin-top: 0.35rem;">${genresHtml}</div>
+                ${matchedAspectsHtml ? `<div class="narrative-dna-strip" style="margin-top: 0.2rem;">${matchedAspectsHtml}</div>` : ''}
+              </div>
+            </div>
+
+            ${influenceHtml}
+            <p class="book-summary-brief" title="${escapeHtml(b.summary)}" onclick="openBookModal('${escapeHtml(b.id)}')">${escapeHtml(b.summary)}</p>
           </div>
-          ${simPercent !== null ? `<div class="sim-score-badge">${simPercent}% Profile Match</div>` : ''}
+
+          <div class="card-front-footer">
+            <button class="card-flip-trigger-btn" onclick="toggleCardFlip('${escapeHtml(b.id)}', event)">
+              ${renderIcon('sliders')}
+              <span>Decomposition & DNA</span>
+              ${renderIcon('rotate-cw', 'flip-icon-spin')}
+            </button>
+            <button class="btn-similar-compact" onclick="addBookToHistory({id: '${escapeHtml(b.id)}', title: '${escapeHtml(b.title).replace(/'/g, "\\'")}', author: '${escapeHtml(b.author || '').replace(/'/g, "\\'")}', genres: '${escapeHtml(b.genres || '').replace(/'/g, "\\'")}'})">
+              <span>Add to Shelf</span>
+              ${renderIcon('plus')}
+            </button>
+          </div>
         </div>
 
-        <div class="book-metadata-row" style="margin-bottom: 0.6rem;">
-          <span class="rating-badge" title="${reviewsCount} reader ratings">
-            ${renderIcon('star', 'gold-star')} ${ratingVal}★ <span style="opacity: 0.65; font-size: 0.72rem;">(${reviewsCount})</span>
-          </span>
-          <span class="popularity-badge">${renderIcon('flame', 'flame-icon')} ${escapeHtml(pop.tier)}</span>
+        <!-- BACK FACE -->
+        <div class="book-card-face book-card-back" style="--book-tint: ${pal.tint}; --book-border: ${pal.border}; --book-accent: ${pal.accent};">
+          <div>
+            <div class="card-back-header">
+              <div class="card-back-title-group">
+                <span class="card-back-pretitle">Profile Vector Alignment</span>
+                <h4 class="card-back-book-title">${escapeHtml(b.title)}</h4>
+              </div>
+              <button class="card-flip-back-btn" onclick="toggleCardFlip('${escapeHtml(b.id)}', event)" title="Flip back to front">
+                ${renderIcon('rotate-ccw')}
+                <span>Flip Front</span>
+              </button>
+            </div>
+
+            ${breakdownHtml}
+            ${influenceHtml}
+          </div>
+
+          <div class="card-back-footer">
+            <button class="action-btn action-btn-subtle" onclick="openBookModal('${escapeHtml(b.id)}')">
+              ${renderIcon('bar-chart')} Deep Analysis
+            </button>
+            <button class="btn-similar" onclick="addBookToHistory({id: '${escapeHtml(b.id)}', title: '${escapeHtml(b.title).replace(/'/g, "\\'")}', author: '${escapeHtml(b.author || '').replace(/'/g, "\\'")}', genres: '${escapeHtml(b.genres || '').replace(/'/g, "\\'")}'})">
+              <span>Add to Shelf</span>
+              ${renderIcon('plus')}
+            </button>
+          </div>
         </div>
-
-        ${influenceHtml}
-        ${breakdownHtml}
-
-        <div class="narrative-dna-strip" style="margin-top: 0.5rem;">
-          ${matchedAspectsHtml}
-        </div>
-
-        <div class="genre-tags">${genresHtml}</div>
-        <p class="book-summary" title="${escapeHtml(b.summary)}" style="cursor: pointer;" onclick="openBookModal('${escapeHtml(b.id)}')">${escapeHtml(b.summary)}</p>
-      </div>
-
-      <div class="card-footer" style="margin-top: 1rem;">
-        <button class="action-btn action-btn-subtle" onclick="openBookModal('${escapeHtml(b.id)}')">
-          ${renderIcon('bar-chart')} Deep Analysis
-        </button>
-        <button class="btn-similar" onclick="addBookToHistory({id: '${escapeHtml(b.id)}', title: '${escapeHtml(b.title).replace(/'/g, "\\'")}', author: '${escapeHtml(b.author || '').replace(/'/g, "\\'")}', genres: '${escapeHtml(b.genres || '').replace(/'/g, "\\'")}'})">
-          <span>Add to Bookshelf</span>
-          ${renderIcon('plus')}
-        </button>
       </div>
     `;
 
-    container.appendChild(card);
+    container.appendChild(cardWrap);
   });
 }
-

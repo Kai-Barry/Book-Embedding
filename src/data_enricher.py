@@ -199,6 +199,10 @@ class DataEnricher:
                 description = vol.get("description", "")
                 # Clean html tags
                 clean_desc = re.sub(r'<[^>]+>', '', description).strip()
+                image_links = vol.get("imageLinks", {})
+                cover_url = image_links.get("thumbnail") or image_links.get("smallThumbnail")
+                if cover_url and cover_url.startswith("http://"):
+                    cover_url = cover_url.replace("http://", "https://")
                 
                 res = {
                     "title": vol.get("title", title),
@@ -208,7 +212,8 @@ class DataEnricher:
                     "description": clean_desc,
                     "averageRating": vol.get("averageRating", None),
                     "ratingsCount": vol.get("ratingsCount", None),
-                    "pageCount": vol.get("pageCount", None)
+                    "pageCount": vol.get("pageCount", None),
+                    "cover_url": cover_url
                 }
                 self.cache[cache_key] = res
                 self._save_cache()
@@ -217,102 +222,36 @@ class DataEnricher:
             pass
         return None
 
-    def bolster_book(self, book_data: Dict[str, Any], fetch_online: bool = False) -> Dict[str, Any]:
-        """
-        Combines series detection, readability metrics, local cache lookups, and optional online APIs.
-        By default (fetch_online=False), runs in <0.02ms purely in-memory with zero network latency.
-        """
-        if not book_data:
-            return book_data
-
-        title = str(book_data.get("title", ""))
-        author = str(book_data.get("author", "Unknown Author"))
-        summary = str(book_data.get("summary", ""))
-        pub_date = str(book_data.get("pub_date", ""))
-        genres = str(book_data.get("genres", "General"))
-
-        # 1. Instant in-memory series detection
-        series_info = self.detect_series(title, summary)
-        book_data["series_info"] = series_info
-
-        # 2. Check local memory cache first for existing enriched metadata
-        clean_title = re.sub(r'\(.*?\)|\[.*?\]', '', title).strip()
-        ol_cache_key = f"ol_{clean_title.lower()}_{author.lower()}"
-        gb_cache_key = f"gb_{clean_title.lower()}_{author.lower()}"
-        
-        ol_data = self.cache.get(ol_cache_key)
-        gb_data = self.cache.get(gb_cache_key)
-
-        # 3. Only query live network if explicitly requested
-        if fetch_online:
-            summary_words = len(summary.split())
-            needs_blurb = summary_words < 40 or "unknown" in author.lower() or "unknown" in str(pub_date).lower()
-            if not gb_data and needs_blurb:
-                gb_data = self.fetch_google_books_blurb(title, author)
-            if not ol_data:
-                ol_data = self.fetch_openlibrary_metadata(title, author)
-
-        # Standardize Author if missing
-        if ("unknown" in author.lower() or not author) and gb_data and gb_data.get("author"):
-            author = gb_data["author"]
-        elif ("unknown" in author.lower() or not author) and ol_data and ol_data.get("author"):
-            author = ol_data["author"]
-        book_data["author"] = author
-
-        # Standardize Pub Date if missing
-        if ("unknown" in str(pub_date).lower() or not pub_date) and gb_data and gb_data.get("publishedDate"):
-            pub_date = gb_data["publishedDate"]
-        elif ("unknown" in str(pub_date).lower() or not pub_date) and ol_data and ol_data.get("pub_year"):
-            pub_date = ol_data["pub_year"]
-        book_data["pub_date"] = str(pub_date)
-
-        # Standardize Genres / Categories if generic
-        if ("general" in genres.lower() or not genres) and gb_data and gb_data.get("categories"):
-            genres = ", ".join(gb_data["categories"])
-        elif ("general" in genres.lower() or not genres) and ol_data and ol_data.get("subjects"):
-            genres = ", ".join(ol_data["subjects"][:4])
-        book_data["genres"] = genres
-
-        # Replace sparse summary with publisher blurb if available from cache/online
-        summary_words = len(summary.split())
-        if summary_words < 40 and gb_data and len(gb_data.get("description", "").split()) >= 40:
-            summary = gb_data["description"]
-        # If summary is massive (> 700 words), extract canonical opening 300-350 words
-        elif summary_words > 700:
-            words = summary.split()
-            summary = " ".join(words[:320]) + "..."
-        book_data["summary"] = summary
-
     @staticmethod
     def compute_popularity_profile(title: str, ratings_count: Optional[int], rating: Optional[float]) -> Dict[str, Any]:
-        """Calculates popularity tier, icon, index, and formatted readership label."""
+        """Calculates popularity tier, icon name, index, and formatted readership label."""
         import hashlib
         
         # If ratings_count is known
         if ratings_count and ratings_count > 0:
             if ratings_count >= 100000:
                 tier = "Global Phenomenon"
-                icon = "🔥"
+                icon = "flame"
                 score = min(99, 90 + int(ratings_count / 100000))
                 desc = f"Top 1% Global Readership ({ratings_count:,} reviews)"
             elif ratings_count >= 20000:
                 tier = "International Bestseller"
-                icon = "⭐"
+                icon = "star"
                 score = min(89, 78 + int(ratings_count / 3000))
                 desc = f"Widely Read Bestseller ({ratings_count:,} reviews)"
             elif ratings_count >= 3000:
                 tier = "Popular Favorite"
-                icon = "📚"
+                icon = "library"
                 score = min(77, 65 + int(ratings_count / 500))
                 desc = f"Community Favorite ({ratings_count:,} reviews)"
             elif ratings_count >= 500:
                 tier = "Acclaimed Read"
-                icon = "✨"
+                icon = "sparkles"
                 score = min(64, 52 + int(ratings_count / 100))
                 desc = f"Well-Regarded ({ratings_count:,} reviews)"
             else:
                 tier = "Cult Gem"
-                icon = "💎"
+                icon = "sparkles"
                 score = min(50, 38 + int(ratings_count / 20))
                 desc = f"Hidden Gem ({ratings_count:,} reviews)"
         else:
@@ -322,19 +261,19 @@ class DataEnricher:
             
             if seed_val > 80:
                 tier = "Bestseller Classic"
-                icon = "⭐"
+                icon = "star"
                 score = 75 + (seed_val % 15)
                 ratings_count = 15000 + (seed_val * 450)
                 desc = f"Classic Read (~{ratings_count//1000}k readers)"
             elif seed_val > 40:
                 tier = "Popular Favorite"
-                icon = "📚"
+                icon = "library"
                 score = 60 + (seed_val % 15)
                 ratings_count = 3500 + (seed_val * 120)
                 desc = f"Popular Choice (~{ratings_count//1000}k readers)"
             else:
                 tier = "Hidden Gem"
-                icon = "💎"
+                icon = "sparkles"
                 score = 42 + (seed_val % 18)
                 ratings_count = 450 + (seed_val * 35)
                 desc = f"Curated Discovery (~{ratings_count} readers)"
@@ -346,7 +285,7 @@ class DataEnricher:
             "tier": tier,
             "icon": icon,
             "score": score,
-            "label": f"{icon} {tier}",
+            "label": tier,
             "description": desc,
             "ratings_count": ratings_count,
             "rating": round(float(rating or 4.15), 2)
@@ -435,6 +374,18 @@ class DataEnricher:
         # 5. Readability Prose Complexity (pure in-memory)
         readability = self.compute_readability_complexity(summary)
         book_data["readability"] = readability
+
+        # 6. Cover ID & Cover Image URL Resolution
+        cover_id = None
+        cover_url = None
+        if ol_data and ol_data.get("cover_id"):
+            cover_id = ol_data["cover_id"]
+            cover_url = f"https://covers.openlibrary.org/b/id/{cover_id}-M.jpg"
+        elif gb_data and gb_data.get("cover_url"):
+            cover_url = gb_data["cover_url"]
+
+        book_data["cover_id"] = cover_id
+        book_data["cover_url"] = cover_url
 
         return book_data
 

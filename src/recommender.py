@@ -136,7 +136,9 @@ class BookRecommender:
             "community_rating": enriched.get("community_rating"),
             "ratings_count": enriched.get("ratings_count"),
             "popularity": enriched.get("popularity"),
-            "readability": enriched.get("readability")
+            "readability": enriched.get("readability"),
+            "cover_id": enriched.get("cover_id"),
+            "cover_url": enriched.get("cover_url")
         }
 
     def search_books_by_text(self, query: str, top_k: int = 10, genre_filter: Optional[str] = None) -> List[Dict[str, Any]]:
