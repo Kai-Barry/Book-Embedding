@@ -56,5 +56,29 @@ class TestAPIEndpoints(unittest.TestCase):
         genres = res.json()
         self.assertIsInstance(genres, list)
 
+    def test_single_cover_endpoint(self):
+        cat_res = self.client.get("/api/catalog?q=Dune&limit=1")
+        self.assertEqual(cat_res.status_code, 200)
+        book_id = cat_res.json()[0]["id"]
+
+        cover_res = self.client.get(f"/api/cover/{book_id}")
+        self.assertEqual(cover_res.status_code, 200)
+        data = cover_res.json()
+        self.assertEqual(data["book_id"], book_id)
+        self.assertIn("has_cover", data)
+
+    def test_batch_covers_endpoint(self):
+        payload = {
+            "books": [
+                {"id": "cmu_6628", "title": "Dune", "author": "Frank Herbert"},
+                {"id": "cmu_71416", "title": "Paul of Dune", "author": "Kevin J. Anderson"}
+            ]
+        }
+        res = self.client.post("/api/covers/batch", json=payload)
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertIn("covers", data)
+        self.assertIsInstance(data["covers"], dict)
+
 if __name__ == "__main__":
     unittest.main()

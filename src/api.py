@@ -4,7 +4,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
 from src.config import WEB_DIR, DEFAULT_LOCAL_MODEL
 from src.vector_store import BookVectorStore
@@ -248,6 +248,50 @@ async def bolster_single_book(book_id: str):
     if not details:
         raise HTTPException(status_code=404, detail="Book not found")
     return {"status": "success", "book": details}
+
+@app.get("/api/cover/{book_id}")
+async def get_single_book_cover(book_id: str):
+    """Dynamically resolves a cover image for any book in catalog or online."""
+    if not recommender:
+        raise HTTPException(status_code=503, detail="Recommender service not ready")
+    book = recommender.get_book_details(book_id)
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    cover_url = recommender.enricher.resolve_cover_for_book(book)
+    return {
+        "book_id": book_id,
+        "has_cover": bool(cover_url),
+        "cover_url": cover_url
+    }
+
+class CoverBatchRequest(BaseModel):
+    books: List[Dict[str, Any]]
+
+@app.post("/api/covers/batch")
+async def batch_resolve_book_covers(req: CoverBatchRequest):
+    """Resolves cover images in parallel for a batch of books."""
+    if not recommender:
+        raise HTTPException(status_code=503, detail="Recommender service not ready")
+    
+    from concurrent.futures import ThreadPoolExecutor
+    results = {}
+    
+    def _resolve(b):
+        bid = str(b.get("id", ""))
+        url = recommender.enricher.resolve_cover_for_book(b)
+        return bid, url
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        futures = [executor.submit(_resolve, b) for b in req.books if b.get("id")]
+        for f in futures:
+            try:
+                bid, url = f.result(timeout=4.0)
+                if url:
+                    results[bid] = url
+            except Exception:
+                pass
+
+    return {"covers": results}
 
 class HistoryItem(BaseModel):
     id: Optional[str] = None

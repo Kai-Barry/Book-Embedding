@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/styles.css?v=13">
+  <link rel="stylesheet" href="/static/styles.css?v=26">
   <!-- Lucide Vector Icons Library -->
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -120,9 +120,9 @@
               </div>
             </div>
             <div class="constellation-actions-row">
-              <button id="btn-focus-constellation" class="action-btn action-btn-subtle" onclick="toggleFocusConstellation()">
+              <button id="btn-focus-constellation" class="action-btn action-btn-subtle active" style="background: rgba(166, 77, 31, 0.15); border-color: var(--accent-terracotta); color: var(--accent-terracotta);" onclick="toggleFocusConstellation()">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><path d="M10.4 10.4 6.4 17.6"/><path d="m17.6 6.4-7.2 4"/></svg>
-                <span>Isolate Constellation</span>
+                <span>Constellation Isolated</span>
               </button>
               <div class="zoom-btn-group">
                 <button class="action-btn zoom-btn" title="Zoom In (Up to 50x)" onclick="zoomGalaxy(1.35)">
@@ -286,6 +286,6 @@
     </div>
   </div>
 
-  <script src="/static/app.js?v=13"></script>
+  <script src="/static/app.js?v=26"></script>
 </body>
 </html>

@@ -541,26 +541,297 @@ header {
   }
 }
 
-/* Large Prominent Book Cover Hero */
+/* Large Prominent Book Cover Hero: Fixed Authentic 2:3 Physical Book Proportion */
 .spotlight-cover-slot {
-  flex-shrink: 0;
+  flex: 0 0 250px;
   width: 250px;
   min-width: 250px;
+  height: 375px; /* Exact 2:3 book ratio */
+  display: flex;
+  flex-direction: column;
   cursor: pointer;
   transition: transform 0.25s ease;
+  position: relative;
+  align-self: flex-start;
 }
 
 .spotlight-cover-slot:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
 }
 
-.spotlight-cover-slot .book-cover-container {
+.spotlight-cover-slot .book-cover-3d {
   width: 100%;
-  height: 360px;
+  height: 100%;
+  aspect-ratio: 2 / 3;
   border-radius: 6px;
-  box-shadow: 0 12px 28px rgba(56, 33, 16, 0.25);
   overflow: hidden;
+  box-shadow: 0 12px 28px rgba(56, 33, 16, 0.25);
   border: 1px solid var(--border-medium);
+}
+
+/* Base 3D Book Cover Component */
+.book-cover-3d {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  flex: 1;
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 12px 28px rgba(56, 33, 16, 0.25);
+  border: 1px solid var(--border-medium);
+  display: flex;
+  flex-direction: column;
+  background: var(--pal-primary, #ffffff);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.book-cover-3d .book-cover-img {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.3s ease;
+}
+
+.book-cover-3d .book-cover-img.fade-in {
+  animation: coverImageFadeIn 0.4s ease-out forwards;
+}
+
+@keyframes coverImageFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.vintage-book-jacket {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(155deg, var(--pal-primary, #1e1915) 0%, var(--pal-secondary, #382110) 100%);
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  user-select: none;
+}
+
+.jacket-cloth-texture {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    radial-gradient(rgba(0, 0, 0, 0.25) 1px, transparent 1px);
+  background-size: 4px 4px;
+  background-position: 0 0, 2px 2px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.jacket-foil-frame {
+  flex: 1;
+  border: 1.5px solid var(--pal-foil, #c98a2c);
+  border-radius: 4px;
+  padding: 0.9rem 0.7rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.12);
+  width: 100%;
+  height: 100%;
+}
+
+.jacket-top-brand {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 0.15rem;
+  padding-right: 75px; /* Leave space for top-right match badge */
+  box-sizing: border-box;
+}
+
+.jacket-brand-text {
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--pal-foil, #c98a2c);
+  opacity: 0.95;
+  white-space: nowrap;
+}
+
+.jacket-genre-band {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 0.5rem;
+  margin-bottom: 0.1rem;
+  padding: 0 0.2rem;
+  box-sizing: border-box;
+}
+
+.jacket-genre-pill {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pal-foil, #c98a2c);
+  border: 1px solid var(--pal-foil, #c98a2c);
+  padding: 0.18rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.4);
+  max-width: 95%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jacket-center-artwork {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jacket-emblem-slot {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.3rem auto;
+  color: var(--pal-foil, #c98a2c);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+
+.jacket-meta-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0.2rem 0;
+  width: 100%;
+  padding: 0 0.2rem;
+}
+
+.jacket-book-title {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.jacket-book-author {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--pal-foil, #fef3c7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.95;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Card Poster Specific Overlay Rules: Hide duplicate title in center and highlight foil emblem */
+.card-poster-art .vintage-book-jacket .jacket-meta-slot {
+  display: none;
+}
+
+.card-poster-art .vintage-book-jacket .jacket-center-artwork {
+  margin-bottom: 2.2rem; /* leaves generous room for bottom title scrim */
+}
+
+.card-poster-art .vintage-book-jacket .jacket-emblem-slot {
+  width: 64px;
+  height: 64px;
+}
+
+.card-poster-art .vintage-book-jacket .jacket-emblem-slot svg {
+  width: 56px;
+  height: 56px;
+}
+
+/* Size Variants for Book Covers */
+.size-small .vintage-book-jacket {
+  padding: 0.45rem;
+}
+.size-small .jacket-foil-frame {
+  padding: 0.4rem 0.25rem;
+  border-width: 1px;
+}
+.size-small .jacket-top-brand {
+  padding-right: 0;
+  justify-content: center;
+}
+.size-small .jacket-brand-text {
+  font-size: 0.48rem;
+  letter-spacing: 0.12em;
+}
+.size-small .jacket-genre-band {
+  display: none;
+}
+.size-small .jacket-center-artwork {
+  display: none;
+}
+.size-small .jacket-meta-slot {
+  display: flex;
+}
+.size-small .jacket-book-title {
+  font-size: 0.72rem;
+  -webkit-line-clamp: 2;
+}
+.size-small .jacket-book-author {
+  font-size: 0.62rem;
+}
+
+.size-large .vintage-book-jacket {
+  padding: 1.5rem;
+}
+.size-large .jacket-foil-frame {
+  padding: 1.4rem 1.2rem;
+}
+.size-large .jacket-brand-text {
+  font-size: 0.75rem;
+  letter-spacing: 0.24em;
+}
+.size-large .jacket-genre-pill {
+  font-size: 0.76rem;
+  padding: 0.25rem 0.85rem;
+}
+.size-large .jacket-emblem-slot {
+  width: 64px;
+  height: 64px;
+  margin: 0.8rem auto;
+}
+.size-large .jacket-book-title {
+  font-size: 1.35rem;
+}
+.size-large .jacket-book-author {
+  font-size: 0.92rem;
 }
 
 .spotlight-info-slot {
@@ -649,16 +920,57 @@ header {
   color: var(--text-secondary);
 }
 
+.spotlight-summary-container {
+  margin-top: 0.6rem;
+  position: relative;
+}
+
 .spotlight-summary {
   font-size: 0.92rem;
   color: var(--text-primary);
   line-height: 1.65;
-  margin: 0.6rem 0 0 0;
+  margin: 0;
   background: var(--bg-primary);
   padding: 0.9rem 1.1rem;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-medium);
   border-left: 4px solid var(--accent-terracotta);
+  transition: all 0.25s ease;
+}
+
+.spotlight-summary.is-clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 4; /* Clean 4-line cutoff */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.summary-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent-terracotta);
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-top: 0.35rem;
+  padding: 0.15rem 0.3rem;
+  transition: color 0.15s ease;
+}
+
+.summary-expand-btn:hover {
+  color: var(--accent-leather);
+  text-decoration: underline;
+}
+
+.summary-expand-arrow {
+  transition: transform 0.2s ease;
+}
+
+.summary-expand-arrow.rotate-180 {
+  transform: rotate(180deg);
 }
 
 /* ==========================================================================
@@ -1353,6 +1665,8 @@ header {
   flex-direction: column;
   justify-content: flex-end;
   position: relative;
+  z-index: 2;
+  pointer-events: auto;
 }
 
 .card-poster-art {
@@ -1449,6 +1763,19 @@ header {
   flex-direction: column;
   justify-content: space-between;
   overflow: hidden; /* Zero scrollbars */
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* When flipped, transfer pointer events and top z-index exclusively to back face */
+.book-card-inner.is-flipped .book-card-front {
+  z-index: 1;
+  pointer-events: none !important;
+}
+
+.book-card-inner.is-flipped .book-card-back {
+  z-index: 2;
+  pointer-events: auto !important;
 }
 
 .card-back-main {
@@ -1456,6 +1783,7 @@ header {
   flex-direction: column;
   gap: 0.75rem;
   min-width: 0;
+  cursor: pointer;
 }
 
 .card-back-header {
@@ -1485,26 +1813,6 @@ header {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.card-back-flip-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-medium);
-  border-radius: 4px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: var(--transition);
-}
-
-.card-back-flip-btn:hover {
-  color: var(--accent-leather);
-  border-color: var(--accent-leather);
 }
 
 .match-breakdown-card {
@@ -1584,16 +1892,27 @@ header {
 
 .card-back-footer {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.5rem;
   margin-top: 0.6rem;
+  z-index: 20;
+  position: relative;
+  pointer-events: auto;
 }
 
 .card-back-footer .action-btn {
   flex: 1;
-  padding: 0.45rem 0.5rem;
-  font-size: 0.75rem;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 700;
   justify-content: center;
   text-align: center;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  box-shadow: var(--shadow-subtle);
+  transition: var(--transition);
+  position: relative;
+  z-index: 25;
+  pointer-events: auto;
 }
 
 /* ==========================================================================
@@ -1982,17 +2301,11 @@ header {
 }
 
 .modal-cover-slot {
-  flex-shrink: 0;
-  width: 180px;
-}
-
-.modal-cover-slot .book-cover-container {
-  width: 100%;
-  height: 260px;
-  border-radius: 6px;
-  box-shadow: 0 8px 22px rgba(56, 33, 16, 0.2);
-  border: 1px solid var(--border-medium);
-  overflow: hidden;
+  flex: 0 0 190px;
+  width: 190px;
+  min-width: 190px;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-info-slot {

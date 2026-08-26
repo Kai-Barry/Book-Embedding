@@ -62,39 +62,73 @@ function getBookPalette(book) {
 function getBookPatternSvg(pattern, foilColor) {
   switch (pattern) {
     case 'diagonal-stripes':
-      return `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" class="stripe-pattern-svg"><line x1="0" y1="0" x2="100%" y2="100%" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.18"/><line x1="0" y1="50%" x2="50%" y2="100%" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.18"/><line x1="50%" y1="0" x2="100%" y2="50%" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.18"/></svg>`;
+    case 'starburst':
+      return `<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="${foilColor}" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/><circle cx="12" cy="12" r="3" fill="${foilColor}" fill-opacity="0.25"/></svg>`;
     case 'concentric-circles':
-      return `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" class="stripe-pattern-svg"><circle cx="50%" cy="50%" r="20%" fill="none" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/><circle cx="50%" cy="50%" r="38%" fill="none" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/><circle cx="50%" cy="50%" r="56%" fill="none" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.15"/></svg>`;
+    case 'astronomy':
+      return `<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="${foilColor}" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="9" ry="3.5" transform="rotate(-30 12 12)"/><circle cx="12" cy="12" r="3" fill="${foilColor}" fill-opacity="0.3"/></svg>`;
     case 'geometric-grid':
-      return `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" class="stripe-pattern-svg"><rect x="15%" y="20%" width="70%" height="60%" fill="none" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/><rect x="25%" y="30%" width="50%" height="40%" fill="none" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/></svg>`;
+    case 'folio-crest':
+      return `<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="${foilColor}" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 3 21 12 12 21 3 12 12 3"/><polygon points="12 7 17 12 12 17 7 12 12 7" fill="${foilColor}" fill-opacity="0.2"/></svg>`;
     case 'horizontal-bars':
-      return `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" class="stripe-pattern-svg"><line x1="10%" y1="30%" x2="90%" y2="30%" stroke="${foilColor}" stroke-width="2" stroke-opacity="0.25"/><line x1="20%" y1="45%" x2="80%" y2="45%" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/><line x1="10%" y1="60%" x2="90%" y2="60%" stroke="${foilColor}" stroke-width="2" stroke-opacity="0.25"/></svg>`;
+    case 'laurel':
+      return `<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="${foilColor}" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M9 10h6"/><path d="M9 14h6"/><circle cx="12" cy="6" r="1.5" fill="${foilColor}"/></svg>`;
     case 'overlapping-rings':
-      return `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" class="stripe-pattern-svg"><circle cx="35%" cy="50%" r="30%" fill="none" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/><circle cx="65%" cy="50%" r="30%" fill="none" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/></svg>`;
+    case 'celestial-rings':
+      return `<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="${foilColor}" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="${foilColor}" fill-opacity="0.4"/></svg>`;
     case 'radial-rays':
-      return `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" class="stripe-pattern-svg"><circle cx="50%" cy="40%" r="6" fill="${foilColor}" fill-opacity="0.3"/><line x1="50%" y1="15%" x2="50%" y2="65%" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/><line x1="25%" y1="40%" x2="75%" y2="40%" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/><line x1="32%" y1="22%" x2="68%" y2="58%" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/></svg>`;
+    case 'sunburst':
+      return `<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="${foilColor}" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3"/><path d="M12 19v3"/><path d="M2 12h3"/><path d="M19 12h3"/><path d="m4.93 4.93 2.12 2.12"/><path d="m16.95 16.95 2.12 2.12"/><path d="m16.95 7.05-2.12 2.12"/><path d="m4.93 19.07 2.12-2.12"/></svg>`;
     default:
-      return `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" class="stripe-pattern-svg"><rect x="12%" y="15%" width="76%" height="70%" fill="none" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.25"/><line x1="12%" y1="35%" x2="88%" y2="35%" stroke="${foilColor}" stroke-width="1.5" stroke-opacity="0.2"/></svg>`;
+      return `<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="${foilColor}" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 19 8.5 19 15.5 12 22 5 15.5 5 8.5 12 2"/><circle cx="12" cy="12" r="3.5" fill="${foilColor}" fill-opacity="0.25"/></svg>`;
   }
+}
+
+// Global Client-Side Cover Cache (backed by localStorage)
+const resolvedCoverCache = new Map();
+
+try {
+  const savedCovers = JSON.parse(localStorage.getItem('libraris_cover_cache') || '{}');
+  Object.entries(savedCovers).forEach(([k, v]) => {
+    if (k && v) resolvedCoverCache.set(String(k), String(v));
+  });
+} catch (e) {}
+
+function saveResolvedCover(bookId, url) {
+  if (!bookId || !url) return;
+  resolvedCoverCache.set(String(bookId), String(url));
+  try {
+    const obj = Object.fromEntries(resolvedCoverCache);
+    const keys = Object.keys(obj);
+    if (keys.length > 800) {
+      keys.slice(0, keys.length - 800).forEach(k => delete obj[k]);
+    }
+    localStorage.setItem('libraris_cover_cache', JSON.stringify(obj));
+  } catch (e) {}
 }
 
 function renderBookCover(book, size = 'medium') {
   if (!book) return '';
   const pal = getBookPalette(book);
   const title = escapeHtml(book.title || 'Untitled Book');
-  const author = escapeHtml(book.author || 'Author');
-  const patternSvg = getBookPatternSvg(pal.pattern, pal.foil);
+  const author = escapeHtml(book.author || 'Unknown Author');
+  const genreTag = escapeHtml((book.genres || 'Literature').split(',')[0].trim());
+  const emblemSvg = getBookPatternSvg(pal.pattern, pal.foil);
+  const bookId = String(book.id || '');
   
   // High-resolution or medium cover source
   let coverSrc = book.cover_url || '';
   if (!coverSrc && book.cover_id) {
     coverSrc = `https://covers.openlibrary.org/b/id/${book.cover_id}-M.jpg`;
   }
+  if (!coverSrc && bookId && resolvedCoverCache.has(bookId)) {
+    coverSrc = resolvedCoverCache.get(bookId);
+  }
 
   const hasImage = Boolean(coverSrc);
 
   return `
-    <div class="book-cover-3d size-${size}" style="--pal-primary: ${pal.primary}; --pal-secondary: ${pal.secondary}; --pal-accent: ${pal.accent}; --pal-foil: ${pal.foil};">
+    <div class="book-cover-3d size-${size}" id="cover-3d-${escapeHtml(bookId)}" data-book-id="${escapeHtml(bookId)}" style="--pal-primary: ${pal.primary}; --pal-secondary: ${pal.secondary}; --pal-accent: ${pal.accent}; --pal-foil: ${pal.foil};">
       <div class="book-spine-lighting"></div>
       ${hasImage ? `
         <img 
@@ -105,23 +139,146 @@ function renderBookCover(book, size = 'medium') {
           onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"
         />
       ` : ''}
-      <div class="book-cover-fallback" style="${hasImage ? 'display: none;' : 'display: flex;'}">
-        <div class="stripe-jacket-pattern">${patternSvg}</div>
-        <div class="stripe-jacket-content">
-          <div class="stripe-jacket-publisher">LIBRARIS PRESS</div>
-          <div class="stripe-jacket-title-wrap">
-            <h4 class="stripe-jacket-title">${title}</h4>
-            <div class="stripe-jacket-author">${author}</div>
+      <div class="vintage-book-jacket" style="${hasImage ? 'display: none;' : 'display: flex;'}">
+        <div class="jacket-cloth-texture"></div>
+        <div class="jacket-foil-frame">
+          <div class="jacket-top-brand">
+            <span class="jacket-brand-text">LIBRARIS CLASSICS</span>
           </div>
-          <div class="stripe-jacket-colophon">
-            <span>FIRST ED.</span>
-            <span class="stripe-jacket-rule"></span>
-            <span>${escapeHtml((book.genres || 'LIT').split(',')[0].trim().toUpperCase())}</span>
+
+          <div class="jacket-genre-band">
+            <span class="jacket-genre-pill">${genreTag}</span>
+          </div>
+
+          <div class="jacket-center-artwork">
+            <div class="jacket-emblem-slot">
+              ${emblemSvg}
+            </div>
+          </div>
+
+          <div class="jacket-meta-slot">
+            <h3 class="jacket-book-title">${title}</h3>
+            <div class="jacket-book-author">by ${author}</div>
           </div>
         </div>
       </div>
     </div>
   `;
+}
+
+async function autoResolveMissingCovers(booksList) {
+  if (!booksList || !Array.isArray(booksList) || booksList.length === 0) return;
+
+  const missing = [];
+  booksList.forEach(b => {
+    if (!b || !b.id) return;
+    const bid = String(b.id);
+    const cachedUrl = resolvedCoverCache.get(bid);
+    if (cachedUrl) {
+      injectCoverImageIntoCard(bid, cachedUrl, b.title);
+    } else if (!b.cover_url && !b.cover_id) {
+      missing.push({ id: bid, title: b.title, author: b.author });
+    }
+  });
+
+  if (missing.length === 0) return;
+
+  try {
+    const res = await fetch('/api/covers/batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ books: missing })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const covers = data.covers || {};
+
+      Object.entries(covers).forEach(([bookId, url]) => {
+        if (url) {
+          saveResolvedCover(bookId, url);
+          const matchBook = missing.find(m => String(m.id) === String(bookId));
+          injectCoverImageIntoCard(bookId, url, matchBook ? matchBook.title : 'Book Cover');
+        }
+      });
+    }
+  } catch (err) {
+    console.warn('Backend batch cover resolution error:', err);
+  }
+
+  // Client-side OpenLibrary fallback for any still unresolved
+  missing.forEach(async (m) => {
+    if (resolvedCoverCache.has(m.id)) return;
+    const directUrl = await fetchDirectOpenLibraryCover(m.title, m.author);
+    if (directUrl) {
+      saveResolvedCover(m.id, directUrl);
+      injectCoverImageIntoCard(m.id, directUrl, m.title);
+    }
+  });
+}
+
+async function fetchDirectOpenLibraryCover(title, author) {
+  try {
+    const cleanTitle = (title || '').replace(/\(.*?\)|\[.*?\]/g, '').trim();
+    if (!cleanTitle) return null;
+    let q = `title:${encodeURIComponent(cleanTitle)}`;
+    if (author && !author.toLowerCase().includes('unknown')) {
+      q += ` author:${encodeURIComponent(author.trim())}`;
+    }
+    const res = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=1`, { cache: 'force-cache' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.docs && data.docs.length > 0 && data.docs[0].cover_i) {
+      return `https://covers.openlibrary.org/b/id/${data.docs[0].cover_i}-M.jpg`;
+    }
+  } catch (e) {}
+  return null;
+}
+
+function injectCoverImageIntoCard(bookId, coverUrl, title = '') {
+  if (!bookId || !coverUrl) return;
+  const bidStr = String(bookId);
+
+  // Find all cover slots matching this book ID across the entire page (Stage 02 hero, Stage 03 grid, Stage 04 profile, modals)
+  const allSlots = Array.from(document.querySelectorAll('.book-cover-3d')).filter(slot => {
+    const dataId = slot.getAttribute('data-book-id');
+    const id = slot.id;
+    return (dataId && dataId === bidStr) || (id && id === `cover-3d-${bidStr}`);
+  });
+
+  if (allSlots.length === 0) return;
+
+  const preloader = new Image();
+  preloader.src = coverUrl;
+  preloader.onload = () => {
+    allSlots.forEach(slot => {
+      let existingImg = slot.querySelector('.book-cover-img');
+      const jacket = slot.querySelector('.vintage-book-jacket');
+
+      if (existingImg) {
+        existingImg.src = coverUrl;
+        existingImg.style.display = 'block';
+      } else {
+        const newImg = document.createElement('img');
+        newImg.src = coverUrl;
+        newImg.alt = title || 'Book Cover';
+        newImg.className = 'book-cover-img fade-in';
+        newImg.loading = 'lazy';
+        newImg.onerror = () => {
+          newImg.style.display = 'none';
+          if (jacket) jacket.style.display = 'flex';
+        };
+        const spine = slot.querySelector('.book-spine-lighting');
+        if (spine && spine.nextSibling) {
+          slot.insertBefore(newImg, spine.nextSibling);
+        } else {
+          slot.prepend(newImg);
+        }
+      }
+      if (jacket) {
+        jacket.style.display = 'none';
+      }
+    });
+  };
 }
 
 function toggleCardFlip(bookId, event) {
@@ -147,7 +304,7 @@ let hasDragged = false;
 let hoveredPoint = null;
 let selectedPoint = null;
 let galaxyCanvas, galaxyCtx;
-let focusConstellationOnly = false;
+let focusConstellationOnly = true;
 let animFrameRequested = false;
 
 // Vector Weight Tuning State (1 to 7 Priority Scale for Global Feature Dimensions)
@@ -205,12 +362,27 @@ document.addEventListener('click', (e) => {
 
 function toggleFocusConstellation() {
   focusConstellationOnly = !focusConstellationOnly;
+  updateFocusConstellationButton();
+  requestGalaxyDraw();
+}
+
+function updateFocusConstellationButton() {
   const btn = document.getElementById('btn-focus-constellation');
   if (btn) {
-    btn.innerHTML = focusConstellationOnly ? `${renderIcon('sparkles')} Constellation Isolated` : `${renderIcon('orbit')} Highlighting Mode`;
-    btn.style.background = focusConstellationOnly ? 'rgba(6, 182, 212, 0.3)' : 'rgba(6, 182, 212, 0.15)';
+    if (focusConstellationOnly) {
+      btn.classList.add('active');
+      btn.style.background = 'rgba(166, 77, 31, 0.15)';
+      btn.style.borderColor = 'var(--accent-terracotta)';
+      btn.style.color = 'var(--accent-terracotta)';
+      btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><path d="M10.4 10.4 6.4 17.6"/><path d="m17.6 6.4-7.2 4"/></svg> <span>Constellation Isolated</span>`;
+    } else {
+      btn.classList.remove('active');
+      btn.style.background = '';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+      btn.innerHTML = `${renderIcon('orbit')} <span>Show Full Galaxy</span>`;
+    }
   }
-  requestGalaxyDraw();
 }
 
 function zoomGalaxy(factor) {
@@ -605,7 +777,10 @@ function buildSpatialGrid() {
   }
 }
 
-async function openBookModal(bookId) {
+async function openBookModal(bookId, event) {
+  if (event && event.stopPropagation) {
+    event.stopPropagation();
+  }
   const overlay = document.getElementById('book-modal-overlay');
   const content = document.getElementById('modal-content');
   if (!overlay || !content) return;
@@ -1109,7 +1284,16 @@ function renderTargetSpotlight(targetBook, subclusteredMotifs = {}) {
           </div>
         </div>
         <div class="genre-tags" style="margin-top: 0.4rem;">${genres}</div>
-        <p class="spotlight-summary">${escapeHtml(targetBook.summary)}</p>
+        
+        <div class="spotlight-summary-container">
+          <p id="spotlight-summary-text" class="spotlight-summary ${(targetBook.summary || '').length > 240 ? 'is-clamped' : ''}">${escapeHtml(targetBook.summary)}</p>
+          ${(targetBook.summary || '').length > 240 ? `
+            <button id="spotlight-summary-toggle" class="summary-expand-btn" onclick="toggleSpotlightSummary()">
+              <span>Read more</span>
+              <svg class="summary-expand-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+          ` : ''}
+        </div>
       </div>
     </div>
 
@@ -1208,6 +1392,21 @@ function renderTargetSpotlight(targetBook, subclusteredMotifs = {}) {
 
   renderActiveMotifsTray();
   renderCustomMotifsCategoryCard();
+  autoResolveMissingCovers([targetBook]);
+}
+
+function toggleSpotlightSummary() {
+  const p = document.getElementById('spotlight-summary-text');
+  const btn = document.getElementById('spotlight-summary-toggle');
+  if (!p || !btn) return;
+  const isClamped = p.classList.contains('is-clamped');
+  if (isClamped) {
+    p.classList.remove('is-clamped');
+    btn.innerHTML = `<span>Show less</span> <svg class="summary-expand-arrow rotate-180" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
+  } else {
+    p.classList.add('is-clamped');
+    btn.innerHTML = `<span>Read more</span> <svg class="summary-expand-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
+  }
 }
 
 async function handleBookSimilarSearch(bookIdOrTitle) {
@@ -1290,24 +1489,51 @@ async function handleBookSimilarSearch(bookIdOrTitle) {
 }
 
 function focusGalaxyOnTarget(target, neighbors) {
-  if (!galaxyCanvas || !target) return;
+  if (!galaxyCanvas) return;
+  const parent = galaxyCanvas.parentElement;
+  if (parent) {
+    const rect = parent.getBoundingClientRect();
+    const w = Math.round(rect.width) || parent.clientWidth || 1200;
+    const h = Math.round(rect.height) || parent.clientHeight || 480;
+    if (w > 0 && h > 0 && (galaxyCanvas.width !== w || galaxyCanvas.height !== h)) {
+      galaxyCanvas.width = w;
+      galaxyCanvas.height = h;
+    }
+  }
   const targetScale = 3.8;
   galaxyTransform.scale = targetScale;
-  galaxyTransform.x = galaxyCanvas.width / 2 - (target.x || 0) * targetScale;
-  galaxyTransform.y = galaxyCanvas.height / 2 - (target.y || 0) * targetScale;
+  if (target && target.x !== undefined && target.y !== undefined) {
+    galaxyTransform.x = galaxyCanvas.width / 2 - (target.x || 0) * targetScale;
+    galaxyTransform.y = galaxyCanvas.height / 2 - (target.y || 0) * targetScale;
+  } else {
+    galaxyTransform.x = galaxyCanvas.width / 2;
+    galaxyTransform.y = galaxyCanvas.height / 2;
+  }
   updateZoomIndicator();
-  drawGalaxy();
+  updateFocusConstellationButton();
+  requestGalaxyDraw();
 }
 
 function focusGalaxyOnPoints(points) {
   if (!galaxyCanvas || points.length === 0) return;
+  const parent = galaxyCanvas.parentElement;
+  if (parent) {
+    const rect = parent.getBoundingClientRect();
+    const w = Math.round(rect.width) || parent.clientWidth || 1200;
+    const h = Math.round(rect.height) || parent.clientHeight || 480;
+    if (w > 0 && h > 0 && (galaxyCanvas.width !== w || galaxyCanvas.height !== h)) {
+      galaxyCanvas.width = w;
+      galaxyCanvas.height = h;
+    }
+  }
   const avgX = points.reduce((sum, p) => sum + (p.x || 0), 0) / points.length;
   const avgY = points.reduce((sum, p) => sum + (p.y || 0), 0) / points.length;
   galaxyTransform.scale = 3.5;
   galaxyTransform.x = galaxyCanvas.width / 2 - avgX * 3.5;
   galaxyTransform.y = galaxyCanvas.height / 2 - avgY * 3.5;
   updateZoomIndicator();
-  drawGalaxy();
+  updateFocusConstellationButton();
+  requestGalaxyDraw();
 }
 
 // ----------------- SMART AUTOCOMPLETE WITH KEYBOARD NAVIGATION -----------------
@@ -1394,7 +1620,7 @@ function updateAutocompleteFocus() {
 function selectAutocompleteItem(index) {
   if (index >= 0 && index < autocompleteItems.length) {
     const item = autocompleteItems[index];
-    document.getElementById('book-input').value = item.title;
+document.getElementById('book-input').value = item.title;
     document.getElementById('autocomplete-list').style.display = 'none';
     handleBookSelection(item.id);
   }
@@ -1407,18 +1633,31 @@ function initGalaxyCanvas() {
   galaxyCtx = galaxyCanvas.getContext('2d');
 
   function resize() {
-    if (!galaxyCanvas || !galaxyCanvas.parentElement) return;
-    const rect = galaxyCanvas.parentElement.getBoundingClientRect();
-    if (rect.width > 0 && rect.height > 0) {
-      galaxyCanvas.width = rect.width;
-      galaxyCanvas.height = rect.height;
-      requestGalaxyDraw();
+    if (!galaxyCanvas) return;
+    const parent = galaxyCanvas.parentElement;
+    if (!parent) return;
+    const rect = parent.getBoundingClientRect();
+    const w = Math.round(rect.width) || parent.clientWidth || 1200;
+    const h = Math.round(rect.height) || parent.clientHeight || 480;
+    if (w > 0 && h > 0 && (galaxyCanvas.width !== w || galaxyCanvas.height !== h)) {
+      galaxyCanvas.width = w;
+      galaxyCanvas.height = h;
+      resetGalaxyView();
     }
   }
+
+  const galaxyView = document.getElementById('galaxy-view');
+  if (galaxyView && window.ResizeObserver) {
+    const ro = new ResizeObserver(() => {
+      resize();
+    });
+    ro.observe(galaxyView);
+  }
+
   window.addEventListener('resize', resize);
-  setTimeout(resize, 50);
+  setTimeout(resize, 0);
+  setTimeout(resize, 60);
   setTimeout(resize, 200);
-  setTimeout(resize, 500);
 
   // Mouse pan & zoom with gesture disambiguation (>= 5px travel is drag, not click)
   galaxyCanvas.addEventListener('mousedown', (e) => {
@@ -1482,7 +1721,7 @@ function initGalaxyCanvas() {
   }, { passive: false });
 
   galaxyCanvas.addEventListener('touchmove', (e) => {
-    e.preventDefault(); // Prevent accidental mobile browser page scrolling while dragging canvas
+    e.preventDefault();
     if (e.touches.length === 1 && isDraggingGalaxy) {
       const t = e.touches[0];
       const dist = Math.hypot(t.clientX - touchStartPos.x, t.clientY - touchStartPos.y);
@@ -1507,7 +1746,6 @@ function initGalaxyCanvas() {
   galaxyCanvas.addEventListener('touchend', (e) => {
     if (e.touches.length === 0) {
       if (!touchHasDragged) {
-        // Stationary tap on star on mobile
         const found = findSpatialPointNear(touchStartPos.x, touchStartPos.y, 25);
         if (found) {
           selectedPoint = found;
@@ -1524,39 +1762,14 @@ function initGalaxyCanvas() {
     initialTouchDist = null;
   });
 
-  // Only open book if stationary click (NOT after panning/dragging)
   galaxyCanvas.addEventListener('click', () => {
     if (!hasDragged && hoveredPoint) {
       selectedPoint = hoveredPoint;
       openBookModal(hoveredPoint.id);
     }
   });
-}
 
-async function loadGalaxyData() {
-  try {
-    const statusTag = document.getElementById('galaxy-status-tag');
-    if (statusTag) statusTag.textContent = 'Loading 25,100+ vector stars...';
-
-    const res = await fetch('/api/visualize?max_points=30000');
-    const data = await res.json();
-    galaxyData = data.points;
-    
-    if (statusTag) {
-      statusTag.textContent = `${galaxyData.length.toLocaleString()} Vector Stars Active`;
-    }
-
-    if (galaxyCanvas) {
-      const rect = galaxyCanvas.parentElement.getBoundingClientRect();
-      if (rect.width > 0) {
-        galaxyCanvas.width = rect.width;
-        galaxyCanvas.height = rect.height;
-      }
-    }
-    resetGalaxyView();
-  } catch (e) {
-    console.error('Galaxy load failed:', e);
-  }
+  updateFocusConstellationButton();
 }
 
 async function loadGalaxyData() {
@@ -1573,7 +1786,7 @@ async function loadGalaxyData() {
       statusTag.textContent = `${galaxyData.length.toLocaleString()} Vector Stars Active (60fps Engine)`;
     }
 
-    if (galaxyCanvas) {
+    if (galaxyCanvas && galaxyCanvas.parentElement) {
       const rect = galaxyCanvas.parentElement.getBoundingClientRect();
       if (rect.width > 0) {
         galaxyCanvas.width = rect.width;
@@ -1648,13 +1861,14 @@ function drawGalaxy() {
   }
 
   // 1. Draw Constellation Connection Rays
-  if (targetBookPoint && activeSearchResultPoints.length > 0) {
-    const originX = galaxyTransform.x + (targetBookPoint.x || 0) * galaxyTransform.scale;
-    const originY = galaxyTransform.y + (targetBookPoint.y || 0) * galaxyTransform.scale;
+  if (targetBookPoint && targetBookPoint.x !== undefined && activeSearchResultPoints.length > 0) {
+    const originX = galaxyTransform.x + targetBookPoint.x * galaxyTransform.scale;
+    const originY = galaxyTransform.y + targetBookPoint.y * galaxyTransform.scale;
 
     activeSearchResultPoints.forEach(neighbor => {
-      const targetX = galaxyTransform.x + (neighbor.x || 0) * galaxyTransform.scale;
-      const targetY = galaxyTransform.y + (neighbor.y || 0) * galaxyTransform.scale;
+      if (neighbor.x === undefined || neighbor.y === undefined) return;
+      const targetX = galaxyTransform.x + neighbor.x * galaxyTransform.scale;
+      const targetY = galaxyTransform.y + neighbor.y * galaxyTransform.scale;
 
       const sim = neighbor.weighted_score || neighbor.similarity_score || 0.7;
       ctx.beginPath();
@@ -1674,12 +1888,11 @@ function drawGalaxy() {
   // Clear batch buckets
   for (let color in GENRE_COLORS) GENRE_COLORS[color].length = 0;
   const backgroundBatch = [];
-  const neighborStars = [];
-  let targetStarData = null;
 
-  const targetId = targetBookPoint ? targetBookPoint.id : null;
-  const targetTitleLower = targetBookPoint && targetBookPoint.title ? targetBookPoint.title.toLowerCase() : '';
-  const neighborIds = new Set(activeSearchResultPoints.map(r => r.id));
+  const targetId = targetBookPoint ? String(targetBookPoint.id) : null;
+  const targetTitleLower = targetBookPoint && targetBookPoint.title ? String(targetBookPoint.title).toLowerCase() : '';
+  const neighborIds = new Set(activeSearchResultPoints.map(r => String(r.id)));
+  const neighborTitles = new Set(activeSearchResultPoints.map(r => String(r.title || '').toLowerCase()));
 
   // Determine viewport bounds in data coordinates for instantaneous viewport culling
   const minDataX = (-50 - galaxyTransform.x) / galaxyTransform.scale;
@@ -1703,16 +1916,13 @@ function drawGalaxy() {
     const screenX = galaxyTransform.x + px * galaxyTransform.scale;
     const screenY = galaxyTransform.y + py * galaxyTransform.scale;
 
-    const isTarget = (p.id === targetId) || (targetTitleLower && p.title.toLowerCase() === targetTitleLower);
-    const isNeighbor = neighborIds.has(p.id);
+    const pidStr = String(p.id);
+    const ptitleLower = String(p.title || '').toLowerCase();
+    const isTarget = (pidStr === targetId) || (targetTitleLower && ptitleLower === targetTitleLower);
+    const isNeighbor = neighborIds.has(pidStr) || neighborTitles.has(ptitleLower);
 
-    if (isTarget) {
-      targetStarData = { p, screenX, screenY };
-      continue;
-    }
-    if (isNeighbor) {
-      neighborStars.push({ p, screenX, screenY });
-      continue;
+    if (isTarget || isNeighbor) {
+      continue; // Target and Neighbors are rendered with crisp badges below
     }
 
     if (focusConstellationOnly && hasActiveConstellation) {
@@ -1728,7 +1938,7 @@ function drawGalaxy() {
 
   // Draw Dimmed Background Stars in one single batch draw
   if (backgroundBatch.length > 0) {
-    ctx.fillStyle = 'rgba(56, 33, 16, 0.12)';
+    ctx.fillStyle = 'rgba(56, 33, 16, 0.08)';
     ctx.beginPath();
     for (let i = 0; i < backgroundBatch.length; i += 2) {
       ctx.rect(backgroundBatch[i], backgroundBatch[i+1], 2, 2);
@@ -1750,29 +1960,47 @@ function drawGalaxy() {
     ctx.fill();
   }
 
-  // Draw Suggested Neighbor Stars (Terracotta / Forest Accent)
-  neighborStars.forEach(({ p, screenX, screenY }) => {
-    ctx.beginPath();
-    ctx.arc(screenX, screenY, 8, 0, Math.PI * 2);
-    ctx.fillStyle = '#a64d1f';
-    ctx.fill();
+  // Draw Suggested Neighbor Stars (Terracotta Accent with Titles)
+  if (activeSearchResultPoints.length > 0) {
+    activeSearchResultPoints.forEach(p => {
+      if (p.x === undefined || p.y === undefined) return;
+      const pidStr = String(p.id);
+      const ptitleLower = String(p.title || '').toLowerCase();
+      if (targetId && (pidStr === targetId || (targetTitleLower && ptitleLower === targetTitleLower))) {
+        return; // Target rendered separately
+      }
+      const screenX = galaxyTransform.x + p.x * galaxyTransform.scale;
+      const screenY = galaxyTransform.y + p.y * galaxyTransform.scale;
 
-    // Subtle outline
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+      // Glow halo
+      ctx.beginPath();
+      ctx.arc(screenX, screenY, 12, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(166, 77, 31, 0.18)';
+      ctx.fill();
 
-    // Star Title Tag
-    ctx.fillStyle = '#1e1915';
-    ctx.font = 'bold 11px Plus Jakarta Sans, sans-serif';
-    ctx.fillText(p.title, screenX + 12, screenY + 4);
-  });
+      // Core star
+      ctx.beginPath();
+      ctx.arc(screenX, screenY, 6.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#a64d1f';
+      ctx.fill();
+
+      // White ring
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Star Title Tag
+      ctx.fillStyle = '#1e1915';
+      ctx.font = 'bold 11px Plus Jakarta Sans, sans-serif';
+      ctx.fillText(p.title, screenX + 11, screenY + 4);
+    });
+  }
 
   // Draw Target Book Star (Rich Editorial Ochre/Amber)
-  if (targetStarData || (targetBookPoint && targetBookPoint.x !== undefined)) {
-    const screenX = targetStarData ? targetStarData.screenX : (galaxyTransform.x + targetBookPoint.x * galaxyTransform.scale);
-    const screenY = targetStarData ? targetStarData.screenY : (galaxyTransform.y + targetBookPoint.y * galaxyTransform.scale);
-    const title = targetStarData ? targetStarData.p.title : targetBookPoint.title;
+  if (targetBookPoint && targetBookPoint.x !== undefined) {
+    const screenX = galaxyTransform.x + targetBookPoint.x * galaxyTransform.scale;
+    const screenY = galaxyTransform.y + targetBookPoint.y * galaxyTransform.scale;
+    const title = targetBookPoint.title || 'Anchor Book';
 
     ctx.beginPath();
     ctx.arc(screenX, screenY, 13, 0, Math.PI * 2);
@@ -2062,15 +2290,15 @@ function renderResults(books, title, latency, targetBook = null, conceptKeywords
 
         <!-- BACK FACE: DECOMPOSITION & ACTIONS (ZERO SCROLLBAR) -->
         <div class="book-card-face book-card-back" style="--book-border: ${pal.border};">
-          <div class="card-back-main">
+          <div class="card-back-main" onclick="toggleCardFlip('${escapeHtml(b.id)}', event)" title="Click card to flip back to cover">
             <div class="card-back-header">
               <div style="min-width: 0; flex: 1;">
                 <h4 class="card-back-title" title="${escapeHtml(b.title)}">${escapeHtml(b.title)}</h4>
                 <div class="card-back-author">by ${escapeHtml(b.author || 'Unknown')}</div>
               </div>
-              <button class="card-back-flip-btn" onclick="toggleCardFlip('${escapeHtml(b.id)}', event)" title="Flip back to cover">
-                ${renderIcon('rotate-ccw')}
-              </button>
+              <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: var(--bg-primary); padding: 0.15rem 0.4rem; border-radius: 4px; border: 1px solid var(--border-subtle); display: inline-flex; align-items: center; gap: 0.25rem;">
+                ${renderIcon('rotate-ccw')} Flip
+              </span>
             </div>
 
             ${matchBreakdownHtml}
@@ -2082,10 +2310,10 @@ function renderResults(books, title, latency, targetBook = null, conceptKeywords
           </div>
           
           <div class="card-back-footer">
-            <button class="action-btn action-btn-subtle" onclick="openBookModal('${escapeHtml(b.id)}')">
-              ${renderIcon('book-open')} Deep Analysis
+            <button type="button" class="action-btn action-btn-subtle" onclick="openBookModal('${escapeHtml(b.id)}', event)" title="Open literary profile modal">
+              ${renderIcon('book-open')} Analysis
             </button>
-            <button class="action-btn btn-search-primary" onclick="exploreBook('${escapeHtml(b.id)}', '${escapeHtml(b.title).replace(/'/g, "\\'")}')">
+            <button type="button" class="action-btn btn-search-primary" onclick="exploreBook('${escapeHtml(b.id)}', '${escapeHtml(b.title).replace(/'/g, "\\'")}', event)" title="Set as Anchor Book & find similar literature">
               <span>Explore ➔</span>
             </button>
           </div>
@@ -2094,10 +2322,15 @@ function renderResults(books, title, latency, targetBook = null, conceptKeywords
     `;
     container.appendChild(cardWrap);
   });
+  autoResolveMissingCovers(filteredBooks);
 }
 
-function exploreBook(id, title) {
-  document.getElementById('book-input').value = title;
+function exploreBook(id, title, event) {
+  if (event && event.stopPropagation) {
+    event.stopPropagation();
+  }
+  const input = document.getElementById('book-input');
+  if (input) input.value = title;
   handleBookSelection(id);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -2759,15 +2992,15 @@ function renderProfileResults(books, latency) {
 
         <!-- BACK FACE: DECOMPOSITION & ACTIONS (ZERO SCROLLBAR) -->
         <div class="book-card-face book-card-back" style="--book-border: ${pal.border};">
-          <div class="card-back-main">
+          <div class="card-back-main" onclick="toggleCardFlip('${escapeHtml(b.id)}', event)" title="Click card to flip back to cover">
             <div class="card-back-header">
               <div style="min-width: 0; flex: 1;">
                 <h4 class="card-back-title" title="${escapeHtml(b.title)}">${escapeHtml(b.title)}</h4>
                 <div class="card-back-author">by ${escapeHtml(b.author || 'Unknown')}</div>
               </div>
-              <button class="card-back-flip-btn" onclick="toggleCardFlip('${escapeHtml(b.id)}', event)" title="Flip back to cover">
-                ${renderIcon('rotate-ccw')}
-              </button>
+              <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: var(--bg-primary); padding: 0.15rem 0.4rem; border-radius: 4px; border: 1px solid var(--border-subtle); display: inline-flex; align-items: center; gap: 0.25rem;">
+                ${renderIcon('rotate-ccw')} Flip
+              </span>
             </div>
 
             ${breakdownHtml}
@@ -2776,10 +3009,10 @@ function renderProfileResults(books, latency) {
           </div>
           
           <div class="card-back-footer">
-            <button class="action-btn action-btn-subtle" onclick="openBookModal('${escapeHtml(b.id)}')">
-              ${renderIcon('book-open')} Deep Analysis
+            <button type="button" class="action-btn action-btn-subtle" onclick="openBookModal('${escapeHtml(b.id)}', event)" title="Open literary profile modal">
+              ${renderIcon('book-open')} Analysis
             </button>
-            <button class="action-btn btn-search-primary" onclick="addBookToHistory({id: '${escapeHtml(b.id)}', title: '${escapeHtml(b.title).replace(/'/g, "\\'")}', author: '${escapeHtml(b.author || '').replace(/'/g, "\\'")}', genres: '${escapeHtml(b.genres || '').replace(/'/g, "\\'")}'})">
+            <button type="button" class="action-btn btn-search-primary" onclick="addBookToHistory({id: '${escapeHtml(b.id)}', title: '${escapeHtml(b.title).replace(/'/g, "\\'")}', author: '${escapeHtml(b.author || '').replace(/'/g, "\\'")}', genres: '${escapeHtml(b.genres || '').replace(/'/g, "\\'")}'})" title="Add this book to your reading bookshelf">
               <span>+ Add to Shelf</span>
             </button>
           </div>
@@ -2788,4 +3021,5 @@ function renderProfileResults(books, latency) {
     `;
     container.appendChild(cardWrap);
   });
+  autoResolveMissingCovers(books);
 }

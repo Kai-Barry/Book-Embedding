@@ -389,5 +389,54 @@ class DataEnricher:
 
         return book_data
 
+    def resolve_cover_for_book(self, book: Dict[str, Any]) -> Optional[str]:
+        """
+        Quickly resolves a high-quality cover image URL for a book via local cache,
+        OpenLibrary cover ID, or Google Books volume thumbnail.
+        """
+        if not book:
+            return None
+
+        # 1. Check if already has a cover URL
+        if book.get("cover_url"):
+            return book["cover_url"]
+        if book.get("cover_id"):
+            return f"https://covers.openlibrary.org/b/id/{book['cover_id']}-M.jpg"
+
+        title = str(book.get("title", "")).strip()
+        author = str(book.get("author", "")).strip()
+        if not title:
+            return None
+
+        clean_title = re.sub(r'\(.*?\)|\[.*?\]', '', title).strip()
+        ol_cache_key = f"ol_{clean_title.lower()}_{author.lower()}"
+        gb_cache_key = f"gb_{clean_title.lower()}_{author.lower()}"
+
+        # 2. Check local disk/memory cache
+        if ol_cache_key in self.cache and self.cache[ol_cache_key].get("cover_id"):
+            cid = self.cache[ol_cache_key]["cover_id"]
+            return f"https://covers.openlibrary.org/b/id/{cid}-M.jpg"
+
+        if gb_cache_key in self.cache and self.cache[gb_cache_key].get("cover_url"):
+            return self.cache[gb_cache_key]["cover_url"]
+
+        # 3. Live query OpenLibrary first (faster & rate-limit friendly)
+        try:
+            ol_meta = self.fetch_openlibrary_metadata(title, author)
+            if ol_meta and ol_meta.get("cover_id"):
+                return f"https://covers.openlibrary.org/b/id/{ol_meta['cover_id']}-M.jpg"
+        except Exception:
+            pass
+
+        # 4. Live query Google Books
+        try:
+            gb_meta = self.fetch_google_books_blurb(title, author)
+            if gb_meta and gb_meta.get("cover_url"):
+                return gb_meta["cover_url"]
+        except Exception:
+            pass
+
+        return None
+
 # Global instance
 data_enricher = DataEnricher()
