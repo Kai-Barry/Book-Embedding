@@ -1,10 +1,23 @@
 import re
+import math
 from typing import List, Dict, Any, Optional
 import pandas as pd
 from src.embedder import BaseEmbedder, get_embedder
 from src.vector_store import BookVectorStore
 from src.data_enricher import data_enricher
 from src.collaborative import collaborative_engine
+
+def _clean_val(v, default=None):
+    if v is None:
+        return default
+    if isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
+        return default
+    try:
+        if pd.isna(v):
+            return default
+    except Exception:
+        pass
+    return v
 
 class BookRecommender:
     """
@@ -109,6 +122,33 @@ class BookRecommender:
             (self.store.df["title"].str.lower() == book_id_or_title.lower())
         ]
         if match.empty:
+            from src.data_loader import BookDataLoader
+            online_book = BookDataLoader.fetch_online_book(book_id_or_title)
+            if online_book:
+                enriched = self.enricher.bolster_book(online_book, fetch_online=False)
+                from src.style_extractor import StyleExtractor
+                style = StyleExtractor.analyze_book(enriched)
+                subclustered = self.extract_subclustered_motifs(enriched.get("summary", ""), enriched.get("genres", ""))
+                concept_kws = self.extract_concept_keywords(enriched.get("summary", ""), enriched.get("genres", ""))
+                return {
+                    "id": str(enriched["id"]),
+                    "title": str(enriched["title"]),
+                    "author": str(enriched["author"]),
+                    "pub_date": str(enriched["pub_date"]),
+                    "genres": str(enriched["genres"]),
+                    "summary": str(enriched["summary"]),
+                    "style_profile": style,
+                    "subclustered_motifs": subclustered,
+                    "concept_keywords": concept_kws,
+                    "series_info": enriched.get("series_info"),
+                    "community_rating": enriched.get("community_rating", 4.2),
+                    "ratings_count": enriched.get("ratings_count", 2500),
+                    "popularity": enriched.get("popularity", 80),
+                    "readability": enriched.get("readability", "Moderate"),
+                    "cover_id": enriched.get("cover_id"),
+                    "cover_url": enriched.get("cover_url"),
+                    "is_dynamic": True
+                }
             return None
             
         r = match.iloc[0]
@@ -133,12 +173,86 @@ class BookRecommender:
             "subclustered_motifs": subclustered,
             "concept_keywords": concept_kws,
             "series_info": enriched.get("series_info"),
-            "community_rating": enriched.get("community_rating"),
-            "ratings_count": enriched.get("ratings_count"),
+            "community_rating": _clean_val(enriched.get("community_rating")),
+            "ratings_count": _clean_val(enriched.get("ratings_count")),
             "popularity": enriched.get("popularity"),
             "readability": enriched.get("readability"),
-            "cover_id": enriched.get("cover_id"),
-            "cover_url": enriched.get("cover_url")
+            "cover_id": _clean_val(enriched.get("cover_id")),
+            "cover_url": _clean_val(enriched.get("cover_url")),
+            "is_bolstered": bool(enriched.get("is_bolstered", False)),
+            "accolades": enriched.get("accolades", []),
+            "ai_dossier": enriched.get("ai_dossier", {})
+        }
+
+    def bolster_and_update_book(self, book_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Fetches multi-source live web data (Wikipedia, OpenLibrary, Google Books),
+        synthesizes an AI literary dossier with awards and world mechanics,
+        re-encodes the dense vector on the GPU, and permanently mutates the vector database.
+        """
+        if self.store.df is None:
+            return None
+
+        match = self.store.df[
+            (self.store.df["id"].astype(str) == str(book_id)) | 
+            (self.store.df["title"].str.lower() == str(book_id).lower())
+        ]
+        if match.empty:
+            from src.data_loader import BookDataLoader
+            online_book = BookDataLoader.fetch_online_book(book_id)
+            if not online_book:
+                return None
+            raw_dict = online_book
+        else:
+            raw_dict = match.iloc[0].to_dict()
+
+        # 1. Fetch live multi-source web data & synthesize AI dossier
+        enriched = self.enricher.bolster_book(raw_dict, fetch_online=True)
+
+        # 2. Re-encode dense embedding vector on GPU
+        new_vec = None
+        if self.embedder:
+            new_vec = self.embedder.embed_texts([enriched["embedding_text"]])[0]
+
+        # 3. Permanently mutate vector store and collaborative graph
+        if not match.empty:
+            self.store.update_book_metadata_and_vector(enriched["id"], enriched, new_vector=new_vec)
+        else:
+            if new_vec is not None:
+                self.store.add_book_vector(enriched, new_vec)
+                self.collab.add_book(
+                    enriched["id"], 
+                    author=enriched.get("author", ""), 
+                    genres=enriched.get("genres", ""), 
+                    title=enriched.get("title", "")
+                )
+
+        # 4. Extract enhanced motifs & style profile
+        from src.style_extractor import StyleExtractor
+        style = StyleExtractor.analyze_book(enriched)
+        subclustered = self.extract_subclustered_motifs(enriched.get("summary", ""), enriched.get("genres", ""))
+        concept_kws = self.extract_concept_keywords(enriched.get("summary", ""), enriched.get("genres", ""))
+
+        return {
+            "id": str(enriched["id"]),
+            "title": str(enriched["title"]),
+            "author": str(enriched["author"]),
+            "pub_date": str(enriched["pub_date"]),
+            "genres": str(enriched["genres"]),
+            "summary": str(enriched["summary"]),
+            "style_profile": style,
+            "subclustered_motifs": subclustered,
+            "concept_keywords": concept_kws,
+            "series_info": enriched.get("series_info"),
+            "community_rating": _clean_val(enriched.get("community_rating")),
+            "ratings_count": _clean_val(enriched.get("ratings_count")),
+            "popularity": enriched.get("popularity"),
+            "readability": enriched.get("readability"),
+            "cover_id": _clean_val(enriched.get("cover_id")),
+            "cover_url": _clean_val(enriched.get("cover_url")),
+            "is_bolstered": True,
+            "accolades": enriched.get("accolades", []),
+            "ai_dossier": enriched.get("ai_dossier", {})
         }
 
     def search_books_by_text(self, query: str, top_k: int = 10, genre_filter: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -246,14 +360,17 @@ class BookRecommender:
         weight_pacing: float = 1.0,
         weight_motifs: float = 1.0,
         weight_community: float = 1.0,
+        weight_genre: float = 1.0,
+        weight_franchise: float = 1.0,
         boost_keywords: Optional[List[str]] = None,
         exclude_keywords: Optional[List[str]] = None,
         active_keywords: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """
         Finds books mathematically closest in vector embedding space to a given target book,
-        performing a full global vector re-search across all 25,101 books when custom weights/concepts are modified.
-        Supports 1-7 priority scale multipliers, 3-state motif filtering, and Item2Vec collaborative taste blending.
+        performing a full global vector re-search across all 70,000+ books when custom weights/concepts are modified.
+        Supports 1-7 priority scale multipliers, 3-state motif filtering, Item2Vec collaborative taste blending,
+        Genre Concordance, and Franchise/Author affinity.
         """
         target_info = self.store.get_book_info_with_coords(book_id_or_title)
         
@@ -270,13 +387,27 @@ class BookRecommender:
                 matches = df.index[df["title"].str.lower().str.contains(re.escape(str(book_id_or_title).lower()), na=False)].tolist()
 
         if not matches or self.store.embeddings is None:
-            # Check if dynamic online book exists
+            # Check if dynamic online book exists and auto-embed on the fly
             from src.data_loader import BookDataLoader
             online_book = BookDataLoader.fetch_online_book(book_id_or_title)
             if online_book:
-                alt_matches = self.store.df.index[self.store.df["title"].str.lower().str.contains(re.escape(online_book["title"].lower()), na=False)].tolist()
-                if alt_matches:
-                    matches = alt_matches
+                if self.embedder:
+                    vec = self.embedder.embed_texts([online_book["embedding_text"]])[0]
+                    self.store.add_book_vector(online_book, vec)
+                    self.collab.add_book(
+                        online_book["id"], 
+                        author=online_book.get("author", ""), 
+                        genres=online_book.get("genres", ""), 
+                        title=online_book.get("title", "")
+                    )
+                    matches = self.store.df.index[self.store.df["id"].astype(str) == str(online_book["id"])].tolist()
+                    if not matches:
+                        matches = self.store.df.index[self.store.df["title"].str.lower() == online_book["title"].lower()].tolist()
+                    target_info = self.store.get_book_info_with_coords(online_book["id"]) or online_book
+                else:
+                    alt_matches = self.store.df.index[self.store.df["title"].str.lower().str.contains(re.escape(online_book["title"].lower()), na=False)].tolist()
+                    if alt_matches:
+                        matches = alt_matches
             if not matches:
                 raise ValueError(f"Book '{book_id_or_title}' not found in database.")
 
@@ -329,11 +460,11 @@ class BookRecommender:
         avg_boost_weight = (sum(boost_weights_map.values()) / max(1, len(boost_weights_map))) if boost_weights_map else 1.0
         search_concept_weight = 0.45 * avg_boost_weight if clean_boost_kws else 0.0
 
-        # Full global weighted vector search across all 25,101 books
+        # Full global weighted vector search across all 70,000+ books
         candidates = self.store.perform_weighted_search(
             base_vector=base_vector,
             concept_query_vector=concept_vec,
-            top_k=min(120, max(top_k * 6, 60)),
+            top_k=min(140, max(top_k * 7, 70)),
             weight_plot=max(0.05, weight_plot),
             weight_concept=search_concept_weight,
             genre_filter=genre_filter
@@ -350,6 +481,10 @@ class BookRecommender:
         from src.style_extractor import StyleExtractor
         t_style = StyleExtractor.analyze_book(target_info) if target_info else {}
         exclude_kws_set = set([k.lower().strip() for k in effective_exclude_kws if k.strip()])
+
+        t_author = target_info.get("author", "").strip().lower() if target_info else ""
+        t_ser = target_info.get("series_info") if target_info else None
+        t_genres = set([g.strip().lower() for g in target_info.get("genres", "").split(",") if g.strip()]) if target_info else set()
 
         # Fine-grained stylistic & collaborative scoring
         for idx_c, item in enumerate(candidates):
@@ -396,19 +531,34 @@ class BookRecommender:
             collab_sim = float(collab_scores[idx_c]) if idx_c < len(collab_scores) else 0.5
             collab_bonus = (collab_sim - 0.50) * 0.10 * weight_community
 
-            # Series match bonus
-            t_ser = target_info.get("series_info") if target_info else None
-            c_ser = item.get("series_info")
-            series_bonus = 0.05 if (t_ser and c_ser and t_ser.get("series", "").lower() == c_ser.get("series", "").lower()) else 0.0
+            # Franchise & Author Affinity Bonus
+            c_author = item.get("author", "").strip().lower()
+            author_match = 1.0 if (t_author and c_author and t_author == c_author and "unknown" not in t_author) else 0.0
 
-            # Calibrate composite score: baseline cosine similarity + stylistic bonuses + per-motif alignment + collaborative - penalty
+            c_ser = item.get("series_info")
+            series_match = 1.0 if (t_ser and c_ser and t_ser.get("series", "").lower() == c_ser.get("series", "").lower()) else 0.0
+            franchise_bonus = (author_match * 0.09 + series_match * 0.12) * weight_franchise
+
+            # Genre Concordance Bonus & Penalty
+            c_genres = set([g.strip().lower() for g in item.get("genres", "").split(",") if g.strip()])
+            overlap_count = len(t_genres & c_genres)
+            genre_concordance = 0.0
+            if t_genres and c_genres:
+                if overlap_count > 0:
+                    jaccard = overlap_count / len(t_genres | c_genres)
+                    genre_concordance = (0.04 + jaccard * 0.08) * weight_genre
+                else:
+                    genre_concordance = -0.06 * weight_genre
+
+            # Calibrate composite score: baseline cosine similarity + stylistic bonuses + per-motif alignment + collaborative + franchise + genre - penalty
             stylistic_bonus = (
                 (tone_match * 0.05 * weight_tone) + 
                 (style_match * 0.04 * weight_style) + 
                 (pacing_match * 0.04 * weight_pacing) +
                 kw_overlap_bonus +
                 collab_bonus +
-                series_bonus
+                franchise_bonus +
+                genre_concordance
             )
             raw_weighted = item.get("weighted_score", base_sim)
             scaled_plot_weight = 0.85 + (weight_plot * 0.15)
@@ -436,6 +586,10 @@ class BookRecommender:
             
             if target_info:
                 reasons = self.extract_similarity_reasons(target_info, item)
+                if series_match > 0 and t_ser:
+                    reasons.insert(0, f"Franchise Canon: Direct entry in {t_ser.get('series')} series")
+                elif author_match > 0 and t_author:
+                    reasons.insert(0, f"Author Universe: Masterpiece by {item.get('author')}")
                 if matching_motif_names:
                     reasons.append(f"Motif Alignment: {', '.join(matching_motif_names[:2])}")
                 if collab_sim >= 0.72:
@@ -471,24 +625,29 @@ class BookRecommender:
         title_lower = df["title"].str.lower()
         title_norm = title_lower.str.replace("-", " ", regex=False).str.replace("'", "", regex=False)
         
+        # 0. Tier 0: Exact Match Priority
+        exact_matches = df[(title_norm == q_norm) | (title_lower == q)].index.tolist()
+
+        # 1. Tier 1: Prefix Matches
+        prefix_matches = df[title_norm.str.startswith(q_norm, na=False) | title_lower.str.startswith(q, na=False)].index.tolist()
+
         words = q_norm.split()
         if len(words) > 1:
             multi_word_mask = pd.Series(True, index=df.index)
             for w in words:
-                multi_word_mask = multi_word_mask & title_norm.str.contains(w, na=False)
+                # Require whole word boundary or clean substring
+                multi_word_mask = multi_word_mask & title_norm.str.contains(r'\b' + re.escape(w), regex=True, na=False)
             multi_word_matches = df[multi_word_mask].index.tolist()
         else:
             multi_word_matches = []
-
-        prefix_matches = df[title_norm.str.startswith(q_norm, na=False) | title_lower.str.startswith(q, na=False)].index.tolist()
 
         # 2. Tier 2: Instant Inverted Prefix Map Lookup
         matched_indices = []
         if q_norm in self.prefix_map:
             matched_indices.extend(self.prefix_map[q_norm])
 
-        # Merge candidate list preserving priority: multi-word -> prefix -> inverted prefix
-        all_candidates = list(dict.fromkeys(multi_word_matches + prefix_matches + matched_indices))
+        # Merge candidate list preserving strict priority: exact -> prefix -> multi-word -> inverted prefix
+        all_candidates = list(dict.fromkeys(exact_matches + prefix_matches + multi_word_matches + matched_indices))
 
         # 3. Tier 3: RapidFuzz fallback if candidate count is small
         if len(all_candidates) < limit:
@@ -519,18 +678,24 @@ class BookRecommender:
                 "genres": str(row["genres"]),
                 "pub_date": str(row["pub_date"]),
                 "summary": str(row["summary"]),
-                "cover_id": row.get("cover_id") if "cover_id" in row else None,
-                "cover_url": row.get("cover_url") if "cover_url" in row else None,
+                "cover_id": _clean_val(row.get("cover_id")) if "cover_id" in row else None,
+                "cover_url": _clean_val(row.get("cover_url")) if "cover_url" in row else None,
                 "subclustered_motifs": motifs,
                 "is_dynamic": False
             })
 
-        # Dynamic OpenLibrary fetch if no results
-        if len(results) == 0:
+        # Check if we have an exact or high-confidence match in results
+        has_exact_match = any(r["title"].lower().strip() == q.strip() for r in results)
+        has_prefix_match = any(r["title"].lower().strip().startswith(q.strip()) for r in results)
+
+        # Dynamic OpenLibrary fetch if no exact/prefix match and query has at least 3 chars
+        if (len(results) == 0 or (not has_exact_match and not has_prefix_match)) and len(q) >= 3:
             from src.data_loader import BookDataLoader
             online_book = BookDataLoader.fetch_online_book(query)
             if online_book:
                 if not any(r["title"].lower() == online_book["title"].lower() for r in results):
+                    motifs = self.extract_subclustered_motifs(str(online_book.get("summary", "")), str(online_book.get("genres", "")))
+                    online_book["subclustered_motifs"] = motifs
                     online_book["is_dynamic"] = True
                     results.insert(0, online_book)
 
@@ -739,8 +904,23 @@ class BookRecommender:
         if norm > 1e-9:
             user_centroid = user_centroid / norm
 
-        # 2. Compute Base Semantic Cosine Similarities
-        semantic_scores = np.dot(embeddings, user_centroid)
+        # 2. Compute Base Semantic Cosine Similarities & Multi-Anchor Affinity
+        raw_centroid_scores = np.dot(embeddings, user_centroid)
+
+        # Multi-Anchor Affinity: prevent unnatural centroid midpoints by comparing against each 4-5 star loved book
+        anchor_sims = np.zeros(n_books, dtype=np.float32)
+        loved_authors = set()
+        for hb in history_books:
+            if hb["rating"] >= 3.0:
+                sim = np.dot(embeddings, hb["vector"]) * (hb["rating"] / 5.0)
+                anchor_sims = np.maximum(anchor_sims, sim)
+                if hb.get("author") and "unknown" not in str(hb["author"]).lower():
+                    loved_authors.add(str(hb["author"]).lower().strip())
+
+        if history_books:
+            semantic_scores = 0.45 * raw_centroid_scores + 0.55 * anchor_sims
+        else:
+            semantic_scores = raw_centroid_scores
 
         # 3. Compute Item2Vec Collaborative Profile Vector
         collab_scores = np.zeros(n_books, dtype=np.float32)
@@ -757,7 +937,11 @@ class BookRecommender:
             if collab_vectors:
                 user_collab_vec = np.sum(collab_vectors, axis=0) / (sum(collab_weights) + 1e-9)
                 user_collab_vec = user_collab_vec / (np.linalg.norm(user_collab_vec) + 1e-9)
-                collab_scores = self.collab.score_all(user_collab_vec)
+                collab_scores = self.collab.score_all(user_collab_vec, target_length=n_books)
+            else:
+                collab_scores = np.full(n_books, 0.55, dtype=np.float32)
+        else:
+            collab_scores = np.full(n_books, 0.55, dtype=np.float32)
 
         # 4. Compute Aspect Alignment Scores across Catalog
         aspect_boost_scores = np.zeros(n_books, dtype=np.float32)
@@ -766,13 +950,19 @@ class BookRecommender:
             for aspect_key, weight in history_aspect_counts.items():
                 kw_list = ASPECT_KEYWORD_MAP.get(aspect_key, [])
                 if kw_list:
-                    # Pattern matching
                     pattern = "|".join([r"\b" + re.escape(k) + r"\b" for k in kw_list])
                     matches = summaries_genres.str.contains(pattern, regex=True).astype(np.float32)
                     aspect_boost_scores += matches.values * (weight * 0.06)
 
+        # Franchise & Series Affinity Bonus for loved authors on the shelf
+        franchise_scores = np.zeros(n_books, dtype=np.float32)
+        if loved_authors:
+            for a_idx, a_val in enumerate(df["author"]):
+                if str(a_val).lower().strip() in loved_authors:
+                    franchise_scores[a_idx] = 0.08
+
         # 5. Composite Ranking Score
-        composite_scores = (0.65 * semantic_scores) + (0.25 * collab_scores) + aspect_boost_scores
+        composite_scores = (0.60 * semantic_scores) + (0.22 * collab_scores) + aspect_boost_scores + franchise_scores
 
         # 6. Exclude Already-Read History Books
         for h_idx in history_indices:

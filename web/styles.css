@@ -502,15 +502,120 @@ header {
 }
 
 .bolster-btn {
-  background: #ffffff;
-  border-color: var(--border-medium);
+  background: linear-gradient(135deg, rgba(235, 245, 245, 0.9), rgba(225, 240, 240, 0.9));
+  border-color: rgba(43, 114, 114, 0.35);
   color: var(--accent-teal);
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
 
 .bolster-btn:hover {
-  background: var(--bg-primary);
+  background: var(--accent-teal);
   border-color: var(--accent-teal);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(43, 114, 114, 0.28);
+  transform: translateY(-1px);
+}
+
+.bolstered-accolades-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.6rem;
+}
+
+.accolade-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  color: #92400e;
+  border: 1px solid #fde68a;
+  border-radius: 999px;
+  padding: 0.22rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 1px 3px rgba(146, 64, 14, 0.08);
+}
+
+.ai-dossier-card {
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.95));
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  border-left: 4px solid var(--accent-teal);
+  border-radius: var(--radius-md);
+  padding: 1.1rem 1.25rem;
+  margin: 1.2rem 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.ai-dossier-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.ai-bolstered-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+  color: #0369a1;
+  border: 1px solid #7dd3fc;
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.wiki-link-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   color: var(--accent-teal);
+  text-decoration: none;
+  font-size: 0.76rem;
+  font-weight: 600;
+  transition: opacity 0.15s ease;
+}
+
+.wiki-link-badge:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
+.ai-dossier-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.ai-dossier-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.ai-dossier-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.ai-dossier-val {
+  font-size: 0.86rem;
+  color: var(--text-primary);
+  line-height: 1.45;
+  margin: 0;
 }
 
 /* ==========================================================================

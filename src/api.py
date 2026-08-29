@@ -163,6 +163,8 @@ async def get_similar_books(
     weight_pacing: float = 1.0,
     weight_motifs: float = 1.0,
     weight_community: float = 1.0,
+    weight_genre: float = 1.0,
+    weight_franchise: float = 1.0,
     boost_keywords: Optional[str] = None,
     exclude_keywords: Optional[str] = None,
     keywords: Optional[str] = None
@@ -187,6 +189,8 @@ async def get_similar_books(
             weight_pacing=weight_pacing,
             weight_motifs=weight_motifs,
             weight_community=weight_community,
+            weight_genre=weight_genre,
+            weight_franchise=weight_franchise,
             boost_keywords=boost_list,
             exclude_keywords=exclude_list
         )
@@ -207,6 +211,8 @@ async def get_similar_books(
                 weight_pacing=weight_pacing,
                 weight_motifs=weight_motifs,
                 weight_community=weight_community,
+                weight_genre=weight_genre,
+                weight_franchise=weight_franchise,
                 boost_keywords=boost_list,
                 exclude_keywords=exclude_list
             )
@@ -231,23 +237,22 @@ async def get_similar_books(
 
 @app.post("/api/bolster/{book_id}")
 async def bolster_single_book(book_id: str):
-    """Fetches real-time authoritative metadata, ratings, and blurbs from OpenLibrary / Google Books."""
+    """
+    Fetches real-time multi-source metadata from Wikipedia, OpenLibrary, and Google Books,
+    synthesizes an AI literary dossier, and re-embeds the dense vector on the GPU.
+    """
     if not recommender:
         raise HTTPException(status_code=503, detail="Recommender service not ready")
     
-    if recommender.store.df is not None:
-        match = recommender.store.df[
-            (recommender.store.df["id"] == book_id) | 
-            (recommender.store.df["title"].str.lower() == book_id.lower())
-        ]
-        if not match.empty:
-            raw_dict = match.iloc[0].to_dict()
-            recommender.enricher.bolster_book(raw_dict, fetch_online=True)
-
-    details = recommender.get_book_details(book_id)
-    if not details:
-        raise HTTPException(status_code=404, detail="Book not found")
-    return {"status": "success", "book": details}
+    bolstered = recommender.bolster_and_update_book(book_id)
+    if not bolstered:
+        raise HTTPException(status_code=404, detail="Book not found or could not be bolstered")
+        
+    return {
+        "status": "success", 
+        "book": bolstered,
+        "message": "Book bolstered with multi-source web & AI knowledge and re-embedded on GPU."
+    }
 
 @app.get("/api/cover/{book_id}")
 async def get_single_book_cover(book_id: str):

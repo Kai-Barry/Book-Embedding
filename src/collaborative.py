@@ -112,11 +112,49 @@ class CollaborativeEngine:
     def get_embedding(self, book_id: str) -> Optional[np.ndarray]:
         return self.get_collaborative_vector(book_id)
 
-    def score_all(self, query_vec: np.ndarray) -> np.ndarray:
-        if self.vectors is None:
-            return np.zeros(0, dtype=np.float32)
+    def score_all(self, query_vec: np.ndarray, target_length: Optional[int] = None) -> np.ndarray:
+        if self.vectors is None or len(self.vectors) == 0:
+            return np.full(target_length or 0, 0.55, dtype=np.float32)
         scores = np.dot(self.vectors, query_vec)
-        return (scores + 1.0) / 2.0 * 0.55 + 0.40
+        scaled = (scores + 1.0) / 2.0 * 0.55 + 0.40
+        if target_length is not None:
+            if len(scaled) < target_length:
+                pad = np.full(target_length - len(scaled), 0.55, dtype=np.float32)
+                return np.concatenate([scaled, pad])
+            elif len(scaled) > target_length:
+                return scaled[:target_length]
+        return scaled
+
+    def add_book(self, book_id: str, author: str = "", genres: str = "", title: str = ""):
+        """Dynamically appends a new collaborative embedding vector for a newly added book."""
+        bid_str = str(book_id)
+        if bid_str in self.id_to_idx:
+            return
+
+        auth_hash = hash(author.lower()) % 100000
+        genre_hash = hash(genres.lower()) % 100000
+        title_hash = hash(title.lower()) % 100000
+
+        rng = np.random.RandomState(auth_hash + genre_hash)
+        base_taste = rng.randn(self.dim).astype(np.float32)
+        
+        rng_book = np.random.RandomState(title_hash)
+        noise = rng_book.randn(self.dim).astype(np.float32) * 0.35
+        
+        vec = base_taste + noise
+        norm = np.linalg.norm(vec)
+        if norm > 0:
+            vec /= norm
+
+        vec = vec.reshape(1, -1).astype(np.float32)
+        if self.vectors is None:
+            self.vectors = vec
+        else:
+            self.vectors = np.vstack([self.vectors, vec])
+
+        idx = len(self.vectors) - 1
+        self.id_to_idx[bid_str] = idx
+        self.idx_to_id[idx] = bid_str
 
     def get_collaborative_scores(self, target_id: str, candidate_ids: List[str]) -> np.ndarray:
         """
@@ -125,7 +163,7 @@ class CollaborativeEngine:
         """
         target_vec = self.get_collaborative_vector(target_id)
         if target_vec is None or self.vectors is None:
-            return np.zeros(len(candidate_ids), dtype=np.float32)
+            return np.full(len(candidate_ids), 0.55, dtype=np.float32)
 
         scores = np.zeros(len(candidate_ids), dtype=np.float32)
         for i, c_id in enumerate(candidate_ids):

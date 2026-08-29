@@ -138,6 +138,231 @@ class DataEnricher:
             "avg_sentence_len": round(asl, 1)
         }
 
+    @staticmethod
+    def extract_literary_awards(text: str) -> List[Dict[str, str]]:
+        """Scans summary and Wikipedia text for recognized prestigious literary awards and milestones."""
+        if not text:
+            return []
+        t_low = text.lower()
+        awards = []
+        
+        award_patterns = [
+            (r"\bhugo award\b|\bwon the hugo\b|\bhugo winner\b", "Hugo Award Winner", "trophy"),
+            (r"\bnebula award\b|\bwon the nebula\b|\bnebula winner\b", "Nebula Award Winner", "trophy"),
+            (r"\bpulitzer prize\b|\bwon the pulitzer\b", "Pulitzer Prize Winner", "award"),
+            (r"\bbooker prize\b|\bman booker\b", "Booker Prize Winner", "award"),
+            (r"\bnobel prize in literature\b|\bnobel laureate\b", "Nobel Laureate Work", "sparkles"),
+            (r"\bnational book award\b", "National Book Award", "award"),
+            (r"\bnewbery medal\b|\bnewbery honor\b", "Newbery Medal / Honor", "award"),
+            (r"\barthur c\. clarke award\b", "Arthur C. Clarke Award", "trophy"),
+            (r"\bbram stoker award\b", "Bram Stoker Award", "skull"),
+            (r"\blocus award\b", "Locus Award Winner", "trophy"),
+            (r"\bworld fantasy award\b", "World Fantasy Award", "sparkles"),
+            (r"\bgoodreads choice\b", "Goodreads Choice Finalist", "star"),
+            (r"\bnew york times bestseller\b|\bnyt bestseller\b|\b#1 new york times\b", "NYT Bestseller", "flame"),
+            (r"\boprah's book club\b|\boprah book club\b", "Oprah's Book Club Selection", "star"),
+            (r"\bwomen's prize for fiction\b|\borange prize\b", "Women's Prize for Fiction", "award")
+        ]
+        
+        seen = set()
+        for pattern, label, icon in award_patterns:
+            if re.search(pattern, t_low) and label not in seen:
+                seen.add(label)
+                awards.append({"badge": label, "icon": icon})
+                
+        return awards
+
+    def fetch_wikipedia_metadata(self, title: str, author: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        """
+        Queries Wikipedia MediaWiki API for literary historical context, award references,
+        full plot breakdowns (from == Plot == / == Premise == sections), and high-res cover art.
+        """
+        clean_title = re.sub(r'\(.*?\)|\[.*?\]', '', title).strip()
+        cache_key = f"wiki_{clean_title.lower()}_{str(author or '').lower()}"
+        if cache_key in self.cache:
+            return self.cache[cache_key]
+
+        try:
+            author_str = author if author and "unknown" not in author.lower() else ""
+            query = f'"{clean_title}" {author_str} novel'.strip()
+            search_url = f"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={urllib.parse.quote(query)}&format=json&utf8=1"
+            req = urllib.request.Request(search_url, headers={"User-Agent": "BookEmbeddingEngine/2.0 (kaiba@gemini.local)"})
+            with urllib.request.urlopen(req, timeout=5.0) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                search_results = data.get("query", {}).get("search", [])
+                if not search_results:
+                    return None
+
+                best_page = None
+                for s in search_results[:3]:
+                    if clean_title.lower() in s["title"].lower():
+                        best_page = s["title"]
+                        break
+                if not best_page:
+                    best_page = search_results[0]["title"]
+
+            # 1. Fetch full section extracts (including == Plot ==, == Premise ==, == Synopsis ==)
+            extract_url = f"https://en.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&titles={urllib.parse.quote(best_page)}&format=json"
+            ereq = urllib.request.Request(extract_url, headers={"User-Agent": "BookEmbeddingEngine/2.0 (kaiba@gemini.local)"})
+            full_text = ""
+            with urllib.request.urlopen(ereq, timeout=5.0) as eresp:
+                edata = json.loads(eresp.read().decode("utf-8"))
+                pages = edata.get("query", {}).get("pages", {})
+                for pid, pdata in pages.items():
+                    full_text = pdata.get("extract", "")
+                    break
+
+            # 2. Fetch thumbnail and desktop page URL from summary REST API
+            thumbnail = None
+            page_url = f"https://en.wikipedia.org/wiki/{urllib.parse.quote(best_page.replace(' ', '_'))}"
+            try:
+                summary_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{urllib.parse.quote(best_page)}"
+                sreq = urllib.request.Request(summary_url, headers={"User-Agent": "BookEmbeddingEngine/2.0 (kaiba@gemini.local)"})
+                with urllib.request.urlopen(sreq, timeout=3.0) as sresp:
+                    sdata = json.loads(sresp.read().decode("utf-8"))
+                    thumbnail = sdata.get("thumbnail", {}).get("source")
+                    if sdata.get("content_urls", {}).get("desktop", {}).get("page"):
+                        page_url = sdata["content_urls"]["desktop"]["page"]
+            except Exception:
+                pass
+
+            if not full_text:
+                return None
+
+            # 3. Parse out lead overview paragraph and full plot section
+            sections = re.split(r'\n==+\s*([^=]+?)\s*==+\n', full_text)
+            lead_paragraph = sections[0].strip()
+
+            plot_text = ""
+            for i in range(1, len(sections), 2):
+                sec_title = sections[i].lower().strip()
+                sec_content = sections[i+1].strip() if i+1 < len(sections) else ""
+                if any(kw in sec_title for kw in ["plot", "premise", "synopsis", "summary", "overview"]):
+                    plot_text = sec_content
+                    break
+
+            # Build comprehensive multi-paragraph description
+            if plot_text:
+                plot_clean = re.sub(r'===+[^=]+===+', '', plot_text).strip()
+                words = plot_clean.split()
+                if len(words) > 350:
+                    plot_clean = " ".join(words[:350]) + "..."
+                combined_extract = f"{lead_paragraph}\n\n[Plot & Narrative Breakdown]: {plot_clean}"
+            else:
+                combined_extract = lead_paragraph
+
+            awards = self.extract_literary_awards(full_text)
+            res = {
+                "wiki_title": best_page,
+                "extract": combined_extract,
+                "full_text": full_text,
+                "description": lead_paragraph[:200],
+                "thumbnail": thumbnail,
+                "page_url": page_url,
+                "awards": awards
+            }
+            self.cache[cache_key] = res
+            self._save_cache()
+            return res
+        except Exception as e:
+            print(f"[DataEnricher] Wikipedia fetch error for '{title}': {e}")
+        return None
+
+    def synthesize_ai_literary_dossier(
+        self,
+        book_data: Dict[str, Any],
+        wiki_data: Optional[Dict[str, Any]] = None,
+        ol_data: Optional[Dict[str, Any]] = None,
+        gb_data: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Synthesizes structured literary intelligence:
+        - Accolades & awards
+        - Core thematic dilemma / thesis
+        - World mechanics & atmosphere
+        - Target reader persona
+        - Enhanced deep synopsis
+        """
+        title = book_data.get("title", "")
+        author = book_data.get("author", "Unknown Author")
+        genres = book_data.get("genres", "Fiction")
+        base_summary = book_data.get("summary", "")
+
+        # 1. Aggregate all text for award scanning
+        all_text = f"{base_summary} {wiki_data.get('extract', '') if wiki_data else ''} {gb_data.get('description', '') if gb_data else ''}"
+        accolades = self.extract_literary_awards(all_text)
+        if wiki_data and wiki_data.get("awards"):
+            for a in wiki_data["awards"]:
+                if not any(x["badge"] == a["badge"] for x in accolades):
+                    accolades.append(a)
+
+        # 2. Extract Thematic Dilemma & Core Conflict
+        g_low = genres.lower()
+        t_low = all_text.lower()
+
+        if any(k in g_low or k in t_low for k in ["dystopian", "cyberpunk", "totalitarian", "surveillance"]):
+            thematic_dilemma = "Individual autonomy and moral identity under oppressive technological or societal hegemony."
+            world_mechanics = "Stratified dystopian civilization marked by institutional control and covert subversion."
+        elif any(k in g_low or k in t_low for k in ["space opera", "science fiction", "galactic", "planetary"]):
+            thematic_dilemma = "Human survival, ecological destiny, and ethical dilemmas across vast cosmological frontiers."
+            world_mechanics = "Expansive interplanetary civilizations governed by political dynasties and speculative science."
+        elif any(k in g_low or k in t_low for k in ["gothic", "horror", "haunting", "psychological thriller"]):
+            thematic_dilemma = "The fragility of the human psyche when confronted with suppressed trauma and existential dread."
+            world_mechanics = "Claustrophobic, high-tension atmosphere where reality and subjective delusion blur."
+        elif any(k in g_low or k in t_low for k in ["satire", "humor", "irony"]):
+            thematic_dilemma = "Hypocrisy, institutional absurdity, and the comedic tragedy of social conventions."
+            world_mechanics = "Wry, socially conscious narrative lens highlighting human vanity and systemic ironies."
+        elif any(k in g_low or k in t_low for k in ["fantasy", "magic", "epic", "myth"]):
+            thematic_dilemma = "The corrupting nature of absolute power balanced against sacrifice, honor, and destiny."
+            world_mechanics = "Intricately constructed mythos with ancient hierarchies, magical laws, and ancestral conflicts."
+        elif any(k in g_low or k in t_low for k in ["historical", "war", "period"]):
+            thematic_dilemma = "Personal agency colliding with the unyielding momentum of historical catastrophe."
+            world_mechanics = "Meticulously realized historical epoch reflecting authentic cultural tensions and upheavals."
+        else:
+            thematic_dilemma = "Interpersonal intimacy, existential purpose, and the moral choices defining character evolution."
+            world_mechanics = "Grounded contemporary realism exploring nuanced character dynamics and social resonance."
+
+        # 3. Target Reader Persona
+        if any(k in g_low for k in ["science fiction", "cyberpunk", "hard sci-fi"]):
+            target_persona = "Readers who appreciate grand conceptual scope, thought-provoking philosophical world-building, and technological speculation."
+        elif any(k in g_low for k in ["fantasy", "myth"]):
+            target_persona = "Lovers of immersive lore, complex magic systems, and morally nuanced character journeys."
+        elif any(k in g_low for k in ["mystery", "thriller", "crime"]):
+            target_persona = "Fans of propulsive narrative drive, psychological mind games, and high-stakes plot twists."
+        elif any(k in g_low for k in ["literary", "classics"]):
+            target_persona = "Readers seeking lyrical prose, deep emotional resonance, and multi-layered thematic reflection."
+        else:
+            target_persona = "General fiction enthusiasts looking for compelling storytelling with memorable character arcs."
+
+        # 4. Enhanced Synopsis synthesis
+        wiki_extract = wiki_data.get("extract", "").strip() if wiki_data else ""
+        gb_desc = gb_data.get("description", "").strip() if gb_data else ""
+        
+        # Build multi-source enhanced synopsis
+        primary_narrative = gb_desc if len(gb_desc.split()) >= 40 else base_summary
+        enhanced_parts = []
+        if primary_narrative:
+            enhanced_parts.append(primary_narrative)
+        if wiki_extract and wiki_extract != primary_narrative and len(wiki_extract) > 60:
+            # If Wikipedia has literary context, include opening
+            enhanced_parts.append(f"[Literary Context & Significance]: {wiki_extract}")
+
+        enhanced_synopsis = "\n\n".join(enhanced_parts) if enhanced_parts else base_summary
+
+        return {
+            "accolades": accolades,
+            "thematic_dilemma": thematic_dilemma,
+            "world_mechanics": world_mechanics,
+            "target_persona": target_persona,
+            "enhanced_synopsis": enhanced_synopsis,
+            "wikipedia": {
+                "title": wiki_data.get("wiki_title") if wiki_data else None,
+                "extract": wiki_data.get("extract") if wiki_data else None,
+                "url": wiki_data.get("page_url") if wiki_data else None,
+                "thumbnail": wiki_data.get("thumbnail") if wiki_data else None
+            } if wiki_data else None
+        }
+
     def fetch_openlibrary_metadata(self, title: str, author: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """
         Queries OpenLibrary Search API for authoritative author, first publish year, subjects, and ratings.
@@ -197,7 +422,6 @@ class DataEnricher:
             if data.get("totalItems", 0) > 0 and len(data.get("items", [])) > 0:
                 vol = data["items"][0].get("volumeInfo", {})
                 description = vol.get("description", "")
-                # Clean html tags
                 clean_desc = re.sub(r'<[^>]+>', '', description).strip()
                 image_links = vol.get("imageLinks", {})
                 cover_url = image_links.get("thumbnail") or image_links.get("smallThumbnail")
@@ -226,36 +450,61 @@ class DataEnricher:
     def compute_popularity_profile(title: str, ratings_count: Optional[int], rating: Optional[float]) -> Dict[str, Any]:
         """Calculates popularity tier, icon name, index, and formatted readership label."""
         import hashlib
-        
+        import math
+        import pandas as pd
+
+        # Sanitize NaN inputs
+        clean_rating = None
+        if rating is not None:
+            try:
+                r_val = float(rating)
+                if not math.isnan(r_val) and not math.isinf(r_val):
+                    clean_rating = round(r_val, 2)
+            except Exception:
+                clean_rating = None
+
+        clean_count = None
+        if ratings_count is not None:
+            try:
+                c_val = float(ratings_count)
+                if not math.isnan(c_val) and not math.isinf(c_val) and c_val > 0:
+                    clean_count = int(c_val)
+            except Exception:
+                clean_count = None
+
         # If ratings_count is known
-        if ratings_count and ratings_count > 0:
-            if ratings_count >= 100000:
+        if clean_count and clean_count > 0:
+            if clean_count >= 100000:
                 tier = "Global Phenomenon"
                 icon = "flame"
-                score = min(99, 90 + int(ratings_count / 100000))
-                desc = f"Top 1% Global Readership ({ratings_count:,} reviews)"
-            elif ratings_count >= 20000:
+                score = min(99, 90 + int(clean_count / 100000))
+                desc = f"Top 1% Global Readership ({clean_count:,} reviews)"
+            elif clean_count >= 20000:
                 tier = "International Bestseller"
                 icon = "star"
-                score = min(89, 78 + int(ratings_count / 3000))
-                desc = f"Widely Read Bestseller ({ratings_count:,} reviews)"
-            elif ratings_count >= 3000:
+                score = min(89, 78 + int(clean_count / 3000))
+                desc = f"Widely Read Bestseller ({clean_count:,} reviews)"
+            elif clean_count >= 3000:
                 tier = "Popular Favorite"
                 icon = "library"
-                score = min(77, 65 + int(ratings_count / 500))
-                desc = f"Community Favorite ({ratings_count:,} reviews)"
-            elif ratings_count >= 500:
+                score = min(77, 65 + int(clean_count / 500))
+                desc = f"Community Favorite ({clean_count:,} reviews)"
+            elif clean_count >= 500:
                 tier = "Acclaimed Read"
                 icon = "sparkles"
-                score = min(64, 52 + int(ratings_count / 100))
-                desc = f"Well-Regarded ({ratings_count:,} reviews)"
+                score = min(64, 52 + int(clean_count / 100))
+                desc = f"Acclaimed Work ({clean_count:,} reviews)"
             else:
-                tier = "Cult Gem"
+                tier = "Hidden Gem"
                 icon = "sparkles"
-                score = min(50, 38 + int(ratings_count / 20))
-                desc = f"Hidden Gem ({ratings_count:,} reviews)"
+                score = min(55, 42 + int(clean_count / 20))
+                desc = f"Curated Discovery (~{clean_count} readers)"
+
+            if clean_rating is None:
+                h = int(hashlib.md5(title.lower().encode('utf-8')).hexdigest()[:6], 16)
+                clean_rating = round(3.90 + ((h % 15) * 0.04), 2)
         else:
-            # Deterministic pseudo-random estimation for books without direct cached reviews
+            # Deterministic pseudo-random synthesis based on book title hash
             h = int(hashlib.md5(title.lower().encode('utf-8')).hexdigest()[:6], 16)
             seed_val = h % 100
             
@@ -263,23 +512,23 @@ class DataEnricher:
                 tier = "Bestseller Classic"
                 icon = "star"
                 score = 75 + (seed_val % 15)
-                ratings_count = 15000 + (seed_val * 450)
-                desc = f"Classic Read (~{ratings_count//1000}k readers)"
+                clean_count = 15000 + (seed_val * 450)
+                desc = f"Classic Read (~{clean_count//1000}k readers)"
             elif seed_val > 40:
                 tier = "Popular Favorite"
                 icon = "library"
                 score = 60 + (seed_val % 15)
-                ratings_count = 3500 + (seed_val * 120)
-                desc = f"Popular Choice (~{ratings_count//1000}k readers)"
+                clean_count = 3500 + (seed_val * 120)
+                desc = f"Popular Choice (~{clean_count//1000}k readers)"
             else:
                 tier = "Hidden Gem"
                 icon = "sparkles"
                 score = 42 + (seed_val % 18)
-                ratings_count = 450 + (seed_val * 35)
-                desc = f"Curated Discovery (~{ratings_count} readers)"
+                clean_count = 450 + (seed_val * 35)
+                desc = f"Curated Discovery (~{clean_count} readers)"
 
-            if not rating:
-                rating = round(3.85 + ((seed_val % 15) * 0.045), 2)
+            if clean_rating is None:
+                clean_rating = round(3.85 + ((seed_val % 15) * 0.045), 2)
 
         return {
             "tier": tier,
@@ -287,8 +536,8 @@ class DataEnricher:
             "score": score,
             "label": tier,
             "description": desc,
-            "ratings_count": ratings_count,
-            "rating": round(float(rating or 4.15), 2)
+            "ratings_count": clean_count,
+            "rating": clean_rating if clean_rating is not None else 4.15
         }
 
     def bolster_book(self, book_data: Dict[str, Any], fetch_online: bool = False) -> Dict[str, Any]:
@@ -313,18 +562,20 @@ class DataEnricher:
         clean_title = re.sub(r'\(.*?\)|\[.*?\]', '', title).strip()
         ol_cache_key = f"ol_{clean_title.lower()}_{author.lower()}"
         gb_cache_key = f"gb_{clean_title.lower()}_{author.lower()}"
+        wiki_cache_key = f"wiki_{clean_title.lower()}_{author.lower()}"
         
         ol_data = self.cache.get(ol_cache_key)
         gb_data = self.cache.get(gb_cache_key)
+        wiki_data = self.cache.get(wiki_cache_key)
 
         # 3. Only query live network if explicitly requested
         if fetch_online:
-            summary_words = len(summary.split())
-            needs_blurb = summary_words < 40 or "unknown" in author.lower() or "unknown" in str(pub_date).lower()
-            if not gb_data and needs_blurb:
-                gb_data = self.fetch_google_books_blurb(title, author)
+            if not wiki_data:
+                wiki_data = self.fetch_wikipedia_metadata(title, author)
             if not ol_data:
                 ol_data = self.fetch_openlibrary_metadata(title, author)
+            if not gb_data:
+                gb_data = self.fetch_google_books_blurb(title, author)
 
         # Standardize Author if missing
         if ("unknown" in author.lower() or not author) and gb_data and gb_data.get("author"):
@@ -347,16 +598,17 @@ class DataEnricher:
             genres = ", ".join(ol_data["subjects"][:4])
         book_data["genres"] = genres
 
-        # Replace sparse summary with publisher blurb if available from cache/online
-        summary_words = len(summary.split())
-        if summary_words < 40 and gb_data and len(gb_data.get("description", "").split()) >= 40:
-            summary = gb_data["description"]
-        elif summary_words > 700:
-            words = summary.split()
-            summary = " ".join(words[:320]) + "..."
-        book_data["summary"] = summary
+        # 4. Synthesize Multi-Source AI Literary Dossier
+        ai_dossier = self.synthesize_ai_literary_dossier(book_data, wiki_data, ol_data, gb_data)
+        book_data["ai_dossier"] = ai_dossier
+        book_data["accolades"] = ai_dossier.get("accolades", [])
+        if fetch_online or wiki_data:
+            book_data["is_bolstered"] = True
+            if ai_dossier.get("enhanced_synopsis"):
+                summary = ai_dossier["enhanced_synopsis"]
+                book_data["summary"] = summary
 
-        # 4. Community Ratings & Popularity Metrics
+        # 5. Community Ratings & Popularity Metrics
         rating = None
         ratings_count = None
         if gb_data and gb_data.get("averageRating"):
@@ -365,27 +617,33 @@ class DataEnricher:
         elif ol_data and ol_data.get("ratings_average"):
             rating = float(ol_data["ratings_average"])
             ratings_count = ol_data.get("ratings_count", None)
+        elif book_data.get("community_rating"):
+            rating = float(book_data["community_rating"])
+            ratings_count = book_data.get("ratings_count")
         
         pop_profile = self.compute_popularity_profile(title, ratings_count, rating)
         book_data["community_rating"] = pop_profile["rating"]
         book_data["ratings_count"] = pop_profile["ratings_count"]
         book_data["popularity"] = pop_profile
 
-        # 5. Readability Prose Complexity (pure in-memory)
+        # 6. Readability Prose Complexity (pure in-memory)
         readability = self.compute_readability_complexity(summary)
         book_data["readability"] = readability
 
-        # 6. Cover ID & Cover Image URL Resolution
+        # 7. Cover ID & Cover Image URL Resolution (prioritize high-res Wikipedia / OpenLibrary)
         cover_id = None
-        cover_url = None
-        if ol_data and ol_data.get("cover_id"):
+        cover_url = book_data.get("cover_url")
+        if wiki_data and wiki_data.get("thumbnail"):
+            cover_url = wiki_data["thumbnail"]
+        elif ol_data and ol_data.get("cover_id"):
             cover_id = ol_data["cover_id"]
             cover_url = f"https://covers.openlibrary.org/b/id/{cover_id}-M.jpg"
-        elif gb_data and gb_data.get("cover_url"):
+        elif gb_data and gb_data.get("cover_url") and not cover_url:
             cover_url = gb_data["cover_url"]
 
-        book_data["cover_id"] = cover_id
+        book_data["cover_id"] = cover_id or book_data.get("cover_id")
         book_data["cover_url"] = cover_url
+        book_data["embedding_text"] = f"[Tone, Mood & Atmosphere]: {genres}\n[Thematic Motifs & Core Dilemma]: {ai_dossier.get('thematic_dilemma', '')}\n[Narrative Content, Prose & Plot Structure]: {summary}"
 
         return book_data
 

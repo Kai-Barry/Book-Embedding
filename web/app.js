@@ -332,7 +332,9 @@ let currentWeights = {
   tone: 4,        // Balanced (1.0x)
   style: 4,       // Balanced (1.0x)
   pacing: 4,      // Balanced (1.0x)
-  community: 4    // Balanced (1.0x) - Reader Co-Taste & Collaborative Affinity
+  community: 4,   // Balanced (1.0x) - Reader Co-Taste & Collaborative Affinity
+  genre: 5,       // High (1.4x) - Genre Concordance & Taxonomy Anchor
+  franchise: 5    // High (1.4x) - Franchise & Author Canon Continuity
 };
 let currentSubclusteredMotifs = {};
 let motifStates = new Map(); // keyword -> 'neutral' | 'boost-2' | 'boost-3' | 'boost-4' | 'exclude'
@@ -340,9 +342,11 @@ let customMotifs = new Set();
 let selectedCustomMotifLevel = 'boost-2';
 let currentTargetBook = null;
 let currentTargetId = null;
+let totalIndexedBooks = 70119;
 
 // Autocomplete State
-let debounceTimer = null;
+let catalogDebounceTimer = null;
+let catalogAbortController = null;
 let autocompleteItems = [];
 let activeAutocompleteIndex = -1;
 
@@ -472,11 +476,13 @@ let currentMotifCategoryFilter = 'all';
 let selectedInlineTropeLevel = 'boost-2';
 
 const TUNING_PRESETS = [
-  { id: 'balanced', icon: 'crosshair', label: 'Balanced Manifold', weights: { plot: 4, tone: 4, style: 4, pacing: 4, community: 4 }, desc: 'Equal consideration of plot, tone, style, and community' },
-  { id: 'plot_focus', icon: 'book-open', label: 'Narrative & Plot Depth', weights: { plot: 7, tone: 5, style: 4, pacing: 4, community: 1 }, desc: 'Prioritizes story premise and thematic depth' },
-  { id: 'audience_focus', icon: 'users', label: 'Reader Co-Taste Cluster', weights: { plot: 4, tone: 3, style: 3, pacing: 3, community: 7 }, desc: 'Emphasizes reader community overlap' },
-  { id: 'style_twin', icon: 'feather', label: 'Prose & Pacing Twin', weights: { plot: 3, tone: 4, style: 7, pacing: 7, community: 3 }, desc: 'Matches POV, pacing, and prose craft' },
-  { id: 'mood_dread', icon: 'orbit', label: 'Atmospheric Tone & Aura', weights: { plot: 4, tone: 7, style: 4, pacing: 6, community: 2 }, desc: 'Focuses on atmosphere, tone, and tension' }
+  { id: 'balanced', icon: 'crosshair', label: 'Balanced Manifold', weights: { plot: 4, tone: 4, style: 4, pacing: 4, community: 4, genre: 5, franchise: 5 }, desc: 'Equal consideration across all narrative dimensions' },
+  { id: 'franchise_focus', icon: 'sparkles', label: 'Franchise & Universe Canon', weights: { plot: 5, tone: 4, style: 4, pacing: 5, community: 5, genre: 6, franchise: 7 }, desc: 'Prioritizes direct series sequels, shared universes, and same-author thrillers' },
+  { id: 'genre_pure', icon: 'library', label: 'Genre Purity Anchor', weights: { plot: 6, tone: 5, style: 4, pacing: 4, community: 3, genre: 7, franchise: 4 }, desc: 'Locks strictly to the core genre family with zero cross-genre drift' },
+  { id: 'plot_focus', icon: 'book-open', label: 'Narrative & Plot Depth', weights: { plot: 7, tone: 5, style: 4, pacing: 4, community: 1, genre: 5, franchise: 4 }, desc: 'Prioritizes story premise and thematic depth' },
+  { id: 'audience_focus', icon: 'users', label: 'Reader Co-Taste Cluster', weights: { plot: 4, tone: 3, style: 3, pacing: 3, community: 7, genre: 4, franchise: 5 }, desc: 'Emphasizes reader community overlap' },
+  { id: 'style_twin', icon: 'feather', label: 'Prose & Pacing Twin', weights: { plot: 3, tone: 4, style: 7, pacing: 7, community: 3, genre: 5, franchise: 4 }, desc: 'Matches POV, pacing, and prose craft' },
+  { id: 'mood_dread', icon: 'orbit', label: 'Atmospheric Tone & Aura', weights: { plot: 4, tone: 7, style: 4, pacing: 6, community: 2, genre: 5, franchise: 4 }, desc: 'Focuses on atmosphere, tone, and tension' }
 ];
 
 function setStudioTab(tabName) {
@@ -527,7 +533,7 @@ function updateStudioSummary() {
     countBadge.textContent = activeMotifCount > 0 ? `${activeMotifCount} active` : '0';
   }
   if (summaryEl) {
-    summaryEl.textContent = `Active Vector Config: 5 Dimensions Set • ${activeMotifCount} Thematic Filters Active`;
+    summaryEl.textContent = `Active Vector Config: 7 Dimensions Set • ${activeMotifCount} Thematic Filters Active`;
   }
   renderActiveMotifsTray();
 }
@@ -700,7 +706,9 @@ function resetTuningDefaults() {
     tone: 4,
     style: 4,
     pacing: 4,
-    community: 4
+    community: 4,
+    genre: 5,
+    franchise: 5
   };
   motifStates.clear();
   customMotifs.clear();
@@ -718,18 +726,18 @@ function resetTuningDefaults() {
 
 async function bolsterBookLive(bookId) {
   try {
-    showLoading(`Querying OpenLibrary & Google Books live for "${bookId}"...`);
+    showLoading(`Gathering multi-source intelligence from Wikipedia, OpenLibrary & AI for "${bookId}"...`);
     const res = await fetch(`/api/bolster/${encodeURIComponent(bookId)}`, { method: 'POST' });
     if (!res.ok) throw new Error('Could not bolster book from web sources.');
     const data = await res.json();
     hideLoading();
     if (data.book) {
-      if (currentTargetId === bookId) {
+      if (currentTargetId === bookId || (currentTargetBook && (currentTargetBook.id === bookId || currentTargetBook.title.toLowerCase() === String(bookId).toLowerCase()))) {
         currentTargetBook = data.book;
         currentSubclusteredMotifs = data.book.subclustered_motifs || {};
         renderTargetSpotlight(currentTargetBook, currentSubclusteredMotifs);
       }
-      openBookModal(bookId);
+      openBookModal(data.book.id || bookId);
     }
   } catch (err) {
     hideLoading();
@@ -908,6 +916,45 @@ async function openBookModal(bookId, event) {
       modalCard.style.setProperty('--modal-tint', pal.tint);
     }
 
+    const accoladesHtml = (book.accolades && book.accolades.length > 0) ? `
+      <div class="bolstered-accolades-row">
+        ${book.accolades.map(a => `<span class="accolade-badge">${renderIcon(a.icon || 'trophy')} ${escapeHtml(a.badge)}</span>`).join('')}
+      </div>
+    ` : '';
+
+    const aiDossierHtml = (book.ai_dossier && (book.ai_dossier.thematic_dilemma || book.ai_dossier.world_mechanics || (book.ai_dossier.wikipedia && book.ai_dossier.wikipedia.url))) ? `
+      <div class="ai-dossier-card">
+        <div class="ai-dossier-header">
+          <span class="ai-bolstered-pill">${renderIcon('sparkles')} AI & Multi-Source Intelligence</span>
+          ${book.ai_dossier.wikipedia && book.ai_dossier.wikipedia.url ? `
+            <a href="${escapeHtml(book.ai_dossier.wikipedia.url)}" target="_blank" rel="noopener noreferrer" class="wiki-link-badge">
+              ${renderIcon('globe')} Wikipedia Article &rarr;
+            </a>
+          ` : ''}
+        </div>
+        <div class="ai-dossier-body">
+          ${book.ai_dossier.thematic_dilemma ? `
+            <div class="ai-dossier-item">
+              <span class="ai-dossier-label">Core Thematic Dilemma</span>
+              <p class="ai-dossier-val">${escapeHtml(book.ai_dossier.thematic_dilemma)}</p>
+            </div>
+          ` : ''}
+          ${book.ai_dossier.world_mechanics ? `
+            <div class="ai-dossier-item">
+              <span class="ai-dossier-label">World Atmosphere & Narrative Mechanics</span>
+              <p class="ai-dossier-val">${escapeHtml(book.ai_dossier.world_mechanics)}</p>
+            </div>
+          ` : ''}
+          ${book.ai_dossier.target_persona ? `
+            <div class="ai-dossier-item">
+              <span class="ai-dossier-label">Target Reader Persona</span>
+              <p class="ai-dossier-val">${escapeHtml(book.ai_dossier.target_persona)}</p>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    ` : '';
+
     content.innerHTML = `
       <div class="modal-hero-layout">
         <div class="modal-cover-slot">
@@ -929,6 +976,7 @@ async function openBookModal(bookId, event) {
             <span class="popularity-badge">${renderIcon(pop.icon || 'sparkles', 'badge-icon')} ${pop.label}</span>
             ${book.readability ? `<span class="readability-badge" title="Flesch Reading Ease score: ${book.readability.score}">${renderIcon('book-open')} ${escapeHtml(book.readability.label)}</span>` : ''}
           </div>
+          ${accoladesHtml}
           <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.35rem;">${escapeHtml(pop.description)}</div>
           <div class="genre-tags" style="margin-top: 0.5rem;">${genresHtml}</div>
         </div>
@@ -967,6 +1015,8 @@ async function openBookModal(bookId, event) {
 
       ${subclustersHtml}
 
+      ${aiDossierHtml}
+
       <div style="margin-bottom: 2rem;">
         <h4 style="font-size: 0.82rem; color: var(--accent-terracotta); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; font-weight: 800;">Synopsis & Narrative Excerpt</h4>
         <p class="modal-synopsis-box">
@@ -976,7 +1026,7 @@ async function openBookModal(bookId, event) {
 
       <div style="display: flex; gap: 1rem; justify-content: flex-end; flex-wrap: wrap;">
         <button class="action-btn bolster-btn" onclick="bolsterBookLive('${escapeHtml(book.id)}')">
-          ${renderIcon('globe')} Bolster via Live Web Data
+          ${book.is_bolstered ? `${renderIcon('sparkles')} Re-Bolster with Live AI Data` : `${renderIcon('globe')} Bolster via Web & AI`}
         </button>
         <button class="action-btn btn-search-primary" onclick="closeBookModal(); exploreBook('${escapeHtml(book.id)}', '${escapeHtml(book.title).replace(/'/g, "\\'")}')">
           ${renderIcon('compass')} Find Similar Literature
@@ -1012,23 +1062,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function fetchStatus() {
   try {
     const res = await fetch('/api/status');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     
     const gpuEl = document.getElementById('gpu-info');
-    if (data.gpu && data.gpu.available) {
-      gpuEl.textContent = `RTX 4080 CUDA Active (${data.gpu.vram})`;
-    } else {
-      gpuEl.textContent = 'CPU Mode';
+    if (gpuEl) {
+      if (data.gpu && data.gpu.available) {
+        gpuEl.textContent = `${data.gpu.name || 'GPU'} Active (${data.gpu.vram})`;
+      } else {
+        gpuEl.textContent = 'CPU Mode';
+      }
     }
 
     const statsEl = document.getElementById('index-stats');
-    if (data.index.books_count > 0) {
-      statsEl.textContent = `Indexed: ${data.index.books_count.toLocaleString()} books (${data.index.vector_dimension}-dim vectors)`;
-    } else {
-      statsEl.textContent = 'Index empty. Run ingestion script.';
+    if (statsEl) {
+      if (data.index && data.index.books_count > 0) {
+        totalIndexedBooks = data.index.books_count;
+        statsEl.textContent = `Indexed: ${data.index.books_count.toLocaleString()} books (${data.index.vector_dimension}-dim vectors)`;
+      } else {
+        statsEl.textContent = 'Index empty. Run ingestion script.';
+      }
     }
   } catch (err) {
     console.error('Failed to load status:', err);
+    const gpuEl = document.getElementById('gpu-info');
+    if (gpuEl) gpuEl.textContent = 'Server Offline';
+    const statsEl = document.getElementById('index-stats');
+    if (statsEl) statsEl.textContent = 'Index: Server connection failed';
   }
 }
 
@@ -1068,6 +1128,14 @@ function hideLoading() {
 // Stage 3: User clicks "Apply Weights & Search" -> reveals 2D Constellation & Recommendations.
 
 async function handleBookSelection(bookIdOrTitle) {
+  clearTimeout(catalogDebounceTimer);
+  if (catalogAbortController) {
+    catalogAbortController.abort();
+    catalogAbortController = null;
+  }
+  const autoList = document.getElementById('autocomplete-list');
+  if (autoList) autoList.style.display = 'none';
+
   const target = bookIdOrTitle || document.getElementById('book-input').value.trim();
   if (!target) return;
   currentTargetId = target;
@@ -1127,13 +1195,25 @@ function renderTargetSpotlight(targetBook, subclusteredMotifs = {}) {
     .map(g => `<span class="genre-tag">${escapeHtml(g.trim())}</span>`)
     .join('');
 
-  // 5 Dimension Cards definitions with rich explanatory subtitles
+  // 7 Dimension Cards definitions with rich explanatory subtitles
   const DIMENSION_CONFIGS = [
     {
       key: 'plot',
       icon: 'book-open',
       title: 'Plot & Narrative Premise',
       desc: 'Controls how strictly character storylines, premise, and narrative trajectory must match the target book.'
+    },
+    {
+      key: 'genre',
+      icon: 'library',
+      title: 'Genre Concordance & Taxonomy',
+      desc: 'Ensures recommendations stay strictly anchored in the target literary family rather than distant cross-genre hybrids.'
+    },
+    {
+      key: 'franchise',
+      icon: 'sparkles',
+      title: 'Franchise & Author Affinity',
+      desc: 'Promotes direct series sequels, shared universes, and same-author canonical thrillers (e.g. Jack Reacher, Orphan X, Tom Clancy).'
     },
     {
       key: 'tone',
@@ -1304,7 +1384,7 @@ function renderTargetSpotlight(targetBook, subclusteredMotifs = {}) {
           <button id="tab-btn-weights" class="studio-tab-btn ${currentStudioTab === 'weights' ? 'active' : ''}" onclick="setStudioTab('weights')">
             ${renderIcon('sliders')}
             <span>Dimensional Weights</span>
-            <span class="studio-tab-count">5</span>
+            <span class="studio-tab-count">7</span>
           </button>
           <button id="tab-btn-motifs" class="studio-tab-btn ${currentStudioTab === 'motifs' ? 'active' : ''}" onclick="setStudioTab('motifs')">
             ${renderIcon('target')}
@@ -1417,7 +1497,7 @@ async function handleBookSimilarSearch(bookIdOrTitle) {
   const topK = parseInt(document.getElementById('topk-select')?.value || 12);
   const genre = document.getElementById('genre-select')?.value || '';
 
-  showLoading(`Searching 25,101 books for nearest weighted vectors to "${target}"...`);
+  showLoading(`Searching ${totalIndexedBooks.toLocaleString()} books for nearest weighted vectors to "${target}"...`);
 
   try {
     const weight_plot = PRIORITY_LEVELS[currentWeights.plot]?.mult ?? 1.0;
@@ -1425,6 +1505,8 @@ async function handleBookSimilarSearch(bookIdOrTitle) {
     const weight_style = PRIORITY_LEVELS[currentWeights.style]?.mult ?? 0.7;
     const weight_pacing = PRIORITY_LEVELS[currentWeights.pacing]?.mult ?? 0.7;
     const weight_community = PRIORITY_LEVELS[currentWeights.community]?.mult ?? 1.0;
+    const weight_genre = PRIORITY_LEVELS[currentWeights.genre]?.mult ?? 1.4;
+    const weight_franchise = PRIORITY_LEVELS[currentWeights.franchise]?.mult ?? 1.4;
 
     const boostList = [];
     const excludeList = [];
@@ -1437,7 +1519,7 @@ async function handleBookSimilarSearch(bookIdOrTitle) {
       }
     });
 
-    let url = `/api/similar/${encodeURIComponent(target)}?top_k=${topK}&weight_plot=${weight_plot}&weight_tone=${weight_tone}&weight_style=${weight_style}&weight_pacing=${weight_pacing}&weight_community=${weight_community}`;
+    let url = `/api/similar/${encodeURIComponent(target)}?top_k=${topK}&weight_plot=${weight_plot}&weight_tone=${weight_tone}&weight_style=${weight_style}&weight_pacing=${weight_pacing}&weight_community=${weight_community}&weight_genre=${weight_genre}&weight_franchise=${weight_franchise}`;
     if (genre) url += `&genre=${encodeURIComponent(genre)}`;
     if (boostList.length > 0) url += `&boost_keywords=${encodeURIComponent(boostList.join(','))}`;
     if (excludeList.length > 0) url += `&exclude_keywords=${encodeURIComponent(excludeList.join(','))}`;
@@ -1538,23 +1620,34 @@ function focusGalaxyOnPoints(points) {
 
 // ----------------- SMART AUTOCOMPLETE WITH KEYBOARD NAVIGATION -----------------
 function handleCatalogAutocomplete(val) {
-  clearTimeout(debounceTimer);
+  clearTimeout(catalogDebounceTimer);
+  if (catalogAbortController) {
+    catalogAbortController.abort();
+    catalogAbortController = null;
+  }
+
   const list = document.getElementById('autocomplete-list');
-  if (!val || val.trim().length < 1) {
+  const query = (val || '').trim();
+  if (query.length < 2) {
     list.style.display = 'none';
+    list.innerHTML = '';
     autocompleteItems = [];
     activeAutocompleteIndex = -1;
     return;
   }
 
-  debounceTimer = setTimeout(async () => {
+  catalogDebounceTimer = setTimeout(async () => {
+    catalogAbortController = new AbortController();
     try {
-      const res = await fetch(`/api/catalog?q=${encodeURIComponent(val)}&limit=10`);
+      const res = await fetch(`/api/catalog?q=${encodeURIComponent(query)}&limit=10`, {
+        signal: catalogAbortController.signal
+      });
+      if (!res.ok) return;
       autocompleteItems = await res.json();
       activeAutocompleteIndex = -1;
       
       list.innerHTML = '';
-      if (autocompleteItems.length === 0) {
+      if (!autocompleteItems || autocompleteItems.length === 0) {
         list.style.display = 'none';
         return;
       }
@@ -1579,9 +1672,13 @@ function handleCatalogAutocomplete(val) {
       });
       list.style.display = 'block';
     } catch (e) {
-      console.error(e);
+      if (e.name !== 'AbortError') {
+        console.error(e);
+      }
+    } finally {
+      catalogAbortController = null;
     }
-  }, 50);
+  }, 300);
 }
 
 function handleAutocompleteKeydown(e) {
@@ -1618,9 +1715,14 @@ function updateAutocompleteFocus() {
 }
 
 function selectAutocompleteItem(index) {
+  clearTimeout(catalogDebounceTimer);
+  if (catalogAbortController) {
+    catalogAbortController.abort();
+    catalogAbortController = null;
+  }
   if (index >= 0 && index < autocompleteItems.length) {
     const item = autocompleteItems[index];
-document.getElementById('book-input').value = item.title;
+    document.getElementById('book-input').value = item.title;
     document.getElementById('autocomplete-list').style.display = 'none';
     handleBookSelection(item.id);
   }
@@ -2351,6 +2453,9 @@ function escapeHtml(text) {
 
 let currentAppMode = 'anchor'; // 'anchor' or 'profile'
 let profileHistory = [];
+let profileDebounceTimer = null;
+let profileAbortController = null;
+let profileAutocompleteResults = [];
 let profileActiveIndex = -1;
 
 const UNIVERSAL_PILLARS = [
@@ -2470,39 +2575,57 @@ async function loadStarterProfile(presetKey) {
 }
 
 async function handleProfileAutocomplete(val) {
-  const query = val.trim();
+  clearTimeout(profileDebounceTimer);
+  if (profileAbortController) {
+    profileAbortController.abort();
+    profileAbortController = null;
+  }
+
+  const query = (val || '').trim();
   const listEl = document.getElementById('profile-autocomplete-list');
   profileActiveIndex = -1;
 
   if (query.length < 2) {
     listEl.style.display = 'none';
     listEl.innerHTML = '';
+    profileAutocompleteResults = [];
     return;
   }
 
-  try {
-    const res = await fetch(`/api/catalog?q=${encodeURIComponent(query)}&limit=8`);
-    profileAutocompleteResults = await res.json();
+  profileDebounceTimer = setTimeout(async () => {
+    profileAbortController = new AbortController();
+    try {
+      const res = await fetch(`/api/catalog?q=${encodeURIComponent(query)}&limit=8`, {
+        signal: profileAbortController.signal
+      });
+      if (!res.ok) return;
+      profileAutocompleteResults = await res.json();
 
-    if (profileAutocompleteResults.length === 0) {
-      listEl.style.display = 'none';
-      return;
-    }
+      if (!profileAutocompleteResults || profileAutocompleteResults.length === 0) {
+        listEl.style.display = 'none';
+        listEl.innerHTML = '';
+        return;
+      }
 
-    listEl.innerHTML = profileAutocompleteResults.map((book, idx) => `
-      <div class="autocomplete-item" onclick="selectProfileBook(${idx})">
-        <div>
-          <div class="autocomplete-title">${escapeHtml(book.title)}</div>
-          <div class="autocomplete-author">by ${escapeHtml(book.author || 'Unknown')} &bull; ${escapeHtml(book.pub_date || '')}</div>
+      listEl.innerHTML = profileAutocompleteResults.map((book, idx) => `
+        <div class="autocomplete-item" onclick="selectProfileBook(${idx})">
+          <div>
+            <div class="autocomplete-title">${escapeHtml(book.title)}</div>
+            <div class="autocomplete-author">by ${escapeHtml(book.author || 'Unknown')} &bull; ${escapeHtml(book.pub_date || '')}</div>
+          </div>
+          <span class="genre-tag" style="font-size: 0.72rem;">${escapeHtml((book.genres || '').split(',')[0])}</span>
         </div>
-        <span class="genre-tag" style="font-size: 0.72rem;">${escapeHtml((book.genres || '').split(',')[0])}</span>
-      </div>
-    `).join('');
+      `).join('');
 
-    listEl.style.display = 'block';
-  } catch (err) {
-    console.error("Profile autocomplete error:", err);
-  }
+      listEl.style.display = 'block';
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error("Profile autocomplete error:", err);
+      }
+    } finally {
+      profileAbortController = null;
+    }
+  }, 300);
 }
 
 function handleProfileAutocompleteKeydown(e) {
@@ -2531,6 +2654,11 @@ function updateProfileAutocompleteHighlight(items) {
 }
 
 function selectProfileBook(idx) {
+  clearTimeout(profileDebounceTimer);
+  if (profileAbortController) {
+    profileAbortController.abort();
+    profileAbortController = null;
+  }
   const book = profileAutocompleteResults[idx];
   if (!book) return;
   document.getElementById('profile-search-input').value = book.title;
@@ -2540,6 +2668,14 @@ function selectProfileBook(idx) {
 }
 
 async function handleProfileBookAdd() {
+  clearTimeout(profileDebounceTimer);
+  if (profileAbortController) {
+    profileAbortController.abort();
+    profileAbortController = null;
+  }
+  const autoList = document.getElementById('profile-autocomplete-list');
+  if (autoList) autoList.style.display = 'none';
+
   const inputVal = document.getElementById('profile-search-input').value.trim();
   if (!inputVal) return;
 
@@ -2549,7 +2685,7 @@ async function handleProfileBookAdd() {
     if (data && data.length > 0) {
       addBookToHistory(data[0]);
       document.getElementById('profile-search-input').value = '';
-      document.getElementById('profile-autocomplete-list').style.display = 'none';
+      if (autoList) autoList.style.display = 'none';
     }
   } catch (e) {
     console.error("Failed to add book:", e);
@@ -2862,7 +2998,7 @@ async function synthesizeProfileRecommendations() {
 
   btn.innerHTML = `${renderIcon('zap')} Synthesizing Vector Profile...`;
   resultsSection.style.display = 'block';
-  gridEl.innerHTML = `<div class="loading-state" style="grid-column: 1 / -1;"><div class="spinner"></div><p>Calculating Rocchio Centroid & Collaborative Affinity across 25,101 books...</p></div>`;
+  gridEl.innerHTML = `<div class="loading-state" style="grid-column: 1 / -1;"><div class="spinner"></div><p>Calculating Rocchio Centroid & Collaborative Affinity across ${totalIndexedBooks.toLocaleString()} books...</p></div>`;
 
   try {
     const payload = {
